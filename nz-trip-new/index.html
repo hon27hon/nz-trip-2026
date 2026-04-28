@@ -3,7 +3,202 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0">
-    <title>🇳🇿 新西兰之旅 2026 | 6人小分队</title>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
+    <script>
+        // === Firebase 配置 ===
+        const firebaseConfig = {
+            apiKey: "AIzaSyDAxqNN-_hoOeB0FPmTTiqGRby126foVQo",
+            authDomain: "nz-trip-2026-8a7ed.firebaseapp.com",
+            projectId: "nz-trip-2026-8a7ed",
+            storageBucket: "nz-trip-2026-8a7ed.firebasestorage.app",
+            messagingSenderId: "1008612372969",
+            appId: "1:1008612372969:web:94868591acf882c4b35b78"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const storage = firebase.storage();
+        const auth = firebase.auth();
+
+        // === 管理员登录状态 ===
+        let currentUser = null;
+        let isManager = false;
+
+        auth.onAuthStateChanged(user => {
+            currentUser = user;
+            isManager = !!user;
+            const loginBtn = document.getElementById('btn-login');
+            const logoutBtn = document.getElementById('btn-logout');
+            if (loginBtn) loginBtn.style.display = isManager ? 'none' : 'inline-block';
+            if (logoutBtn) logoutBtn.style.display = isManager ? 'inline-block' : 'none';
+            if (user) {
+                loadPhotos();
+                loadDiaries();
+            }
+        });
+
+        function showLoginModal() {
+            document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+            document.getElementById('modal-login').classList.add('active');
+        }
+
+        async function doLogin() {
+            const email = document.getElementById('login-email').value.trim();
+            const password = document.getElementById('login-password').value;
+            if (!email || !password) { alert('请输入邮箱和密码'); return; }
+            try {
+                await auth.signInWithEmailAndPassword(email, password);
+                closeModal();
+                showToast('✅ 登录成功！');
+            } catch(e) {
+                alert('登录失败：' + e.message);
+            }
+        }
+
+        async function doLogout() {
+            await auth.signOut();
+            showToast('已退出登录');
+        }
+
+        // === 照片上传 ===
+        let pendingPhotos = [];
+
+        function handlePhotoUpload(files) {
+            const preview = document.getElementById('photo-preview');
+            preview.innerHTML = '';
+            pendingPhotos = Array.from(files).slice(0, 9);
+            pendingPhotos.forEach((file, i) => {
+                const reader = new FileReader();
+                reader.onload = e => {
+                    preview.innerHTML += `<div style="position:relative;display:inline-block;"><img src="${e.target.result}" style="width:80px;height:80px;object-fit:cover;border-radius:8px;margin:4px;"><span onclick="removePhoto(${i})" style="position:absolute;top:-6px;right:0;background:#f00;color:#fff;border-radius:50%;width:18px;height:18px;display:flex;align-items:center;justify-content:center;font-size:12px;cursor:pointer;">×</span></div>`;
+                };
+                reader.readAsDataURL(file);
+            });
+        }
+
+        function removePhoto(idx) {
+            pendingPhotos.splice(idx, 1);
+            handlePhotoUpload(pendingPhotos);
+        }
+
+        async function submitPhoto() {
+            if (!isManager) { showLoginModal(); return; }
+            if (pendingPhotos.length === 0) { alert('请先选择照片'); return; }
+
+            const desc = document.getElementById('photo-desc').value.trim();
+            const day = document.getElementById('photo-day').value;
+            const btn = document.querySelector('#modal-photo .submit-btn');
+            btn.textContent = '上传中...';
+            btn.disabled = true;
+
+            try {
+                for (const file of pendingPhotos) {
+                    const ref = storage.ref('photos/' + Date.now() + '_' + file.name);
+                    await ref.put(file);
+                    const url = await ref.getDownloadURL();
+                    await db.collection('photos').add({
+                        url, desc, day,
+                        uploader: currentUser.email,
+                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    });
+                }
+                closeModal();
+                document.getElementById('photo-preview').innerHTML = '';
+                pendingPhotos = [];
+                document.getElementById('photo-desc').value = '';
+                loadPhotos();
+                showToast('📷 照片上传成功！');
+            } catch(e) {
+                alert('上传失败：' + e.message);
+            } finally {
+                btn.textContent = '上传';
+                btn.disabled = false;
+            }
+        }
+
+        async function loadPhotos() {
+            const snap = await db.collection('photos').orderBy('createdAt', 'desc').limit(30).get();
+            const grid = document.getElementById('photo-grid-dynamic');
+            if (!grid) return;
+            if (snap.empty) { grid.innerHTML = '<p style="color:var(--muted);text-align:center;padding:20px;">暂无照片，上传第一张吧！</p>'; return; }
+            let html = '';
+            snap.forEach(doc => {
+                const d = doc.data();
+                html += `<div class="photo-item" onclick="showPhotoModal('${d.url}', '${d.desc || ''}')">
+                    <img src="${d.url}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">
+                    <span class="photo-count">${d.day ? 'D'+d.day : ''} ${d.desc || ''}</span>
+                </div>`;
+            });
+            grid.innerHTML = html;
+        }
+
+        function showPhotoModal(url, desc) {
+            document.getElementById('photo-lightbox-img').src = url;
+            document.getElementById('photo-lightbox-desc').textContent = desc;
+            document.getElementById('modal-lightbox').classList.add('active');
+        }
+
+        // === 日记提交 ===
+        async function submitDiary() {
+            if (!isManager) { showLoginModal(); return; }
+            const content = document.getElementById('diary-content').value.trim();
+            const mood = document.getElementById('diary-mood').value.trim();
+            const day = document.getElementById('diary-day').value;
+            if (!content) { alert('请输入日记内容'); return; }
+            const btn = document.querySelector('#modal-diary .submit-btn');
+            btn.textContent = '保存中...';
+            btn.disabled = true;
+            try {
+                await db.collection('diaries').add({
+                    content, mood, day: day || null,
+                    author: currentUser.email,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                });
+                closeModal();
+                document.getElementById('diary-content').value = '';
+                document.getElementById('diary-mood').value = '';
+                loadDiaries();
+                showToast('📝 日记已保存！');
+            } catch(e) {
+                alert('保存失败：' + e.message);
+            } finally {
+                btn.textContent = '保存日记';
+                btn.disabled = false;
+            }
+        }
+
+        async function loadDiaries() {
+            const snap = await db.collection('diaries').orderBy('createdAt', 'desc').limit(20).get();
+            const container = document.getElementById('diary-dynamic-list');
+            if (!container) return;
+            if (snap.empty) { container.innerHTML = ''; return; }
+            let html = '';
+            snap.forEach(doc => {
+                const d = doc.data();
+                const date = d.createdAt ? new Date(d.createdAt.seconds*1000).toLocaleDateString('zh-CN') : '未知';
+                html += `<div class="diary-entry" style="margin-bottom:16px;">
+                    <div class="diary-header">
+                        <div class="diary-author">
+                            <div class="diary-avatar">🤖</div>
+                            <div>
+                                <div class="diary-author-name">AI 日记${d.day ? ' · Day '+d.day : ''}</div>
+                                <div class="diary-date">${date}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="diary-content"><p>${d.content}</p></div>
+                    ${d.mood ? `<div class="diary-mood">${d.mood}</div>` : ''}
+                </div>`;
+            });
+            container.innerHTML = html;
+        }
+
+        // 页面加载时尝试自动登录（无感知）
+        auth.signInAnonymously().catch(() => {});
+    </script>
+</head>
     <style>
         :root {
             --primary: #00B4D8;
@@ -1343,6 +1538,10 @@
                         <span style="font-size: 24px;">📷</span>
                         <div class="value">上传照片</div>
                     </div>
+                    <div class="info-item" style="cursor: pointer;" onclick="showLoginModal()">
+                        <span style="font-size: 24px;">🔐</span>
+                        <div class="value" id="login-status">管理员</div>
+                    </div>
                     <div class="info-item" style="cursor: pointer;" onclick="handleExpenseClick()">
                         <span style="font-size: 24px;">💰</span>
                         <div class="value">记一笔</div>
@@ -1538,7 +1737,15 @@
         <div class="page" id="page-photo">
             <div class="card">
                 <div class="card-title"><span class="emoji">📷</span> 旅行照片墙</div>
-                <p style="font-size: 12px; color: var(--muted); margin-top: 4px;">每个成员都有专属相册空间</p>
+                <p style="font-size: 12px; color: var(--muted); margin-top: 4px;">所有成员上传的照片 · 点击放大</p>
+            </div>
+
+            <!-- Firebase 动态照片墙 -->
+            <div class="card">
+                <div class="card-title"><span class="emoji">📸</span> 最新上传</div>
+                <div class="photo-grid" id="photo-grid-dynamic" style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+                    <p style="color:var(--muted);text-align:center;padding:20px;grid-column:1/-1;">📭 暂无照片，登录后上传第一张！</p>
+                </div>
             </div>
             
             <!-- Member 1: 陈飞杰 -->
@@ -1652,9 +1859,10 @@
         
         <!-- Diary Page -->
         <div class="page" id="page-diary">
-            <div class="card">
-                <div class="card-title"><span class="emoji">📝</span> 心路历程</div>
-                <p style="font-size: 12px; color: var(--muted); margin-top: 4px;">AI 根据行程、照片与日记片段生成</p>
+            <!-- Firebase 动态日记（登录后可写日记） -->
+            <div class="card" id="diary-dynamic-section">
+                <div class="card-title"><span class="emoji">✏️</span> 团员日记</div>
+                <div id="diary-dynamic-list"></div>
             </div>
             
             <!-- Day 4 Diary -->
@@ -1930,6 +2138,26 @@
     <!-- FAB Button -->
     <button class="fab" onclick="showModal('expense')">+</button>
     
+    <!-- Login Modal -->
+    <div class="modal" id="modal-login">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>🔐 管理员登录</h3>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <p style="font-size:12px;color:var(--muted);margin-bottom:16px;">输入管理员账号密码登录后即可上传照片和日记</p>
+            <div class="form-group">
+                <label>邮箱</label>
+                <input type="email" id="login-email" placeholder="your@email.com">
+            </div>
+            <div class="form-group">
+                <label>密码</label>
+                <input type="password" id="login-password" placeholder="••••••••">
+            </div>
+            <button class="submit-btn" onclick="doLogin()">登录</button>
+        </div>
+    </div>
+
     <!-- Photo Upload Modal -->
     <div class="modal" id="modal-photo">
         <div class="modal-content">
@@ -1943,6 +2171,19 @@
                 <p style="font-size: 11px;">支持 JPG、PNG，最大 10MB</p>
             </div>
             <input type="file" id="photo-input" accept="image/*" multiple style="display:none" onchange="handlePhotoUpload(this.files)">
+            <div id="photo-preview" style="min-height:40px;margin:8px 0;"></div>
+            <div class="form-group">
+                <label>日期（Day）</label>
+                <select id="photo-day" style="width:100%;padding:8px;border-radius:8px;border:1px solid #ddd;">
+                    <option value="">自动（今天）</option>
+                    <option value="1">Day 1 - 4月26日</option><option value="2">Day 2 - 4月27日</option>
+                    <option value="3">Day 3 - 4月28日</option><option value="4">Day 4 - 4月29日</option>
+                    <option value="5">Day 5 - 4月30日</option><option value="6">Day 6 - 5月1日</option>
+                    <option value="7">Day 7 - 5月2日</option><option value="8">Day 8 - 5月3日</option>
+                    <option value="9">Day 9 - 5月4日</option><option value="10">Day 10 - 5月5日</option>
+                    <option value="11">Day 11 - 5月6日</option><option value="12">Day 12 - 5月7日</option>
+                </select>
+            </div>
             <div class="form-group">
                 <label>照片描述（可选）</label>
                 <input type="text" id="photo-desc" placeholder="例如：基督城雅芳河畔">
@@ -1989,10 +2230,35 @@
                 <button class="modal-close" onclick="closeModal()">×</button>
             </div>
             <div class="form-group">
+                <label>日期（Day）</label>
+                <select id="diary-day" style="width:100%;padding:8px;border-radius:8px;border:1px solid #ddd;">
+                    <option value="">今天</option>
+                    <option value="1">Day 1 - 4月26日</option><option value="2">Day 2 - 4月27日</option>
+                    <option value="3">Day 3 - 4月28日</option><option value="4">Day 4 - 4月29日</option>
+                    <option value="5">Day 5 - 4月30日</option><option value="6">Day 6 - 5月1日</option>
+                    <option value="7">Day 7 - 5月2日</option><option value="8">Day 8 - 5月3日</option>
+                    <option value="9">Day 9 - 5月4日</option><option value="10">Day 10 - 5月5日</option>
+                    <option value="11">Day 11 - 5月6日</option><option value="12">Day 12 - 5月7日</option>
+                </select>
+            </div>
+            <div class="form-group">
                 <label>今天最难忘的事</label>
-                <textarea id="diary-content" placeholder="记录今天的精彩瞬间..."></textarea>
+                <textarea id="diary-content" placeholder="记录今天的精彩瞬间..." style="min-height:120px;"></textarea>
+            </div>
+            <div class="form-group">
+                <label>心情（emoji，可不填）</label>
+                <input type="text" id="diary-mood" placeholder="如 🌊🐧✨">
             </div>
             <button class="submit-btn" onclick="submitDiary()">保存日记</button>
+        </div>
+    </div>
+
+    <!-- Photo Lightbox Modal -->
+    <div class="modal" id="modal-lightbox">
+        <div style="position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:rgba(0,0,0,0.9);z-index:9999;" onclick="closeModal()">
+            <button class="modal-close" onclick="closeModal()" style="position:absolute;top:16px;right:20px;color:#fff;font-size:32px;background:none;border:none;cursor:pointer;z-index:10000;">×</button>
+            <img id="photo-lightbox-img" src="" style="max-width:90vw;max-height:85vh;object-fit:contain;border-radius:12px;">
+            <div id="photo-lightbox-desc" style="position:absolute;bottom:20px;left:0;right:0;text-align:center;color:#fff;font-size:14px;"></div>
         </div>
     </div>
     
