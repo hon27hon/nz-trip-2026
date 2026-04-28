@@ -1,0 +1,1997 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0">
+    <title>🇳🇿 新西兰之旅 2026 | 6人小分队</title>
+    <style>
+        :root {
+            --primary: #00B4D8;
+            --secondary: #90E0EF;
+            --accent: #FF6B6B;
+            --dark: #0D1B2A;
+            --light: #CAF0F8;
+            --text: #1B263B;
+            --muted: #778DA9;
+            --card-bg: rgba(255,255,255,0.95);
+            --success: #2ECC71;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'PingFang SC', 'Microsoft YaHei', sans-serif;
+            background: linear-gradient(135deg, #0D1B2A 0%, #1B3A4B 50%, #0D1B2A 100%);
+            min-height: 100vh;
+            color: var(--text);
+            line-height: 1.6;
+        }
+        
+        /* Mobile-First Container */
+        .container {
+            max-width: 100%;
+            padding: 0;
+        }
+        
+        /* Bottom Navigation - Mobile Priority */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background: var(--card-bg);
+            backdrop-filter: blur(20px);
+            display: flex;
+            justify-content: space-around;
+            padding: 8px 0 max(8px, env(safe-area-inset-bottom));
+            box-shadow: 0 -4px 20px rgba(0,0,0,0.15);
+            z-index: 1000;
+            border-radius: 20px 20px 0 0;
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 6px 12px;
+            color: var(--muted);
+            text-decoration: none;
+            font-size: 10px;
+            gap: 4px;
+            transition: all 0.3s;
+            cursor: pointer;
+        }
+        
+        .nav-item.active {
+            color: var(--primary);
+        }
+        
+        .nav-item .icon {
+            font-size: 22px;
+            transition: transform 0.3s;
+        }
+        
+        .nav-item.active .icon {
+            transform: scale(1.15);
+        }
+        
+        /* Page Content */
+        .page {
+            display: none;
+            padding: 16px;
+            padding-bottom: 80px;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .page.active {
+            display: block;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Hero Section */
+        .hero {
+            background: linear-gradient(135deg, rgba(0,180,216,0.2), rgba(144,224,239,0.1));
+            border-radius: 20px;
+            padding: 24px 16px;
+            text-align: center;
+            margin-bottom: 16px;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .hero h1 {
+            font-size: 24px;
+            color: #fff;
+            margin-bottom: 8px;
+        }
+        
+        .hero h1 span {
+            background: linear-gradient(90deg, #00B4D8, #90E0EF);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .hero .subtitle {
+            color: rgba(255,255,255,0.7);
+            font-size: 13px;
+            margin-bottom: 12px;
+        }
+        
+        .hero-badges {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+        }
+        
+        .badge {
+            background: rgba(255,255,255,0.1);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.8);
+        }
+        
+        /* Cards */
+        .card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .card-title .emoji {
+            font-size: 20px;
+        }
+        
+        .card-date {
+            font-size: 11px;
+            color: var(--muted);
+        }
+        
+        /* Day Detail Page */
+        .day-hero {
+            position: relative;
+            border-radius: 20px;
+            overflow: hidden;
+            margin-bottom: 16px;
+            height: 220px;
+        }
+        
+        .day-hero img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .day-hero-overlay {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px 16px;
+            background: linear-gradient(transparent, rgba(0,0,0,0.8));
+            color: #fff;
+        }
+        
+        .day-hero-overlay h2 {
+            font-size: 20px;
+            margin-bottom: 4px;
+        }
+        
+        .day-hero-overlay p {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        /* Location Pills */
+        .locations {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 12px 0;
+        }
+        
+        .location-pill {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: #fff;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 12px;
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .location-pill .arrow {
+            opacity: 0.6;
+        }
+        
+        /* Info Grid */
+        .info-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin: 12px 0;
+        }
+        
+        .info-item {
+            background: #f8f9fa;
+            padding: 12px;
+            border-radius: 12px;
+            text-align: center;
+        }
+        
+        .info-item .label {
+            font-size: 10px;
+            color: var(--muted);
+            margin-bottom: 4px;
+        }
+        
+        .info-item .value {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        /* Highlight Box */
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(0,180,216,0.08), rgba(144,224,239,0.05));
+            border-left: 4px solid var(--primary);
+            padding: 14px;
+            border-radius: 0 12px 12px 0;
+            margin: 12px 0;
+        }
+        
+        .highlight-box h4 {
+            font-size: 13px;
+            color: var(--primary);
+            margin-bottom: 8px;
+        }
+        
+        .highlight-box p {
+            font-size: 13px;
+            color: var(--text);
+            line-height: 1.7;
+        }
+        
+        /* AI Tips */
+        .ai-tips {
+            background: linear-gradient(135deg, rgba(255,107,107,0.08), rgba(255,183,77,0.05));
+            border: 1px solid rgba(255,107,107,0.2);
+            border-radius: 16px;
+            padding: 16px;
+            margin: 16px 0;
+        }
+        
+        .ai-tips-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 12px;
+            color: var(--accent);
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .tip-item {
+            background: #fff;
+            border-radius: 12px;
+            padding: 12px;
+            margin-bottom: 10px;
+            display: flex;
+            gap: 12px;
+        }
+        
+        .tip-icon {
+            width: 36px;
+            height: 36px;
+            background: linear-gradient(135deg, #FFE5E5, #FFF0F0);
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            flex-shrink: 0;
+        }
+        
+        .tip-content h5 {
+            font-size: 13px;
+            color: var(--dark);
+            margin-bottom: 4px;
+        }
+        
+        .tip-content p {
+            font-size: 12px;
+            color: var(--muted);
+            line-height: 1.5;
+        }
+        
+        /* Timeline Nav */
+        .day-selector {
+            display: flex;
+            gap: 8px;
+            overflow-x: auto;
+            padding: 12px 0;
+            -webkit-overflow-scrolling: touch;
+            scrollbar-width: none;
+        }
+        
+        .day-selector::-webkit-scrollbar { display: none; }
+        
+        .day-dot {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: #e0e0e0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+            color: #666;
+            flex-shrink: 0;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        
+        .day-dot.past { background: #d0d0d0; color: #888; }
+        .day-dot.today { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; box-shadow: 0 4px 12px rgba(0,180,216,0.3); }
+        .day-dot.future { background: #f0f0f0; color: #999; }
+        .day-dot.active { transform: scale(1.15); }
+        
+        /* Photo Gallery - Per Member */
+        .member-photos {
+            margin-bottom: 20px;
+        }
+        
+        .member-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .member-avatar {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 18px;
+        }
+        
+        .member-info h4 {
+            font-size: 14px;
+            color: var(--dark);
+        }
+        
+        .member-info p {
+            font-size: 11px;
+            color: var(--muted);
+        }
+        
+        .photo-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        
+        .photo-item {
+            aspect-ratio: 1;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #f0f0f0;
+            position: relative;
+        }
+        
+        .photo-item img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .photo-item .add-btn {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed #ddd;
+            background: none;
+            cursor: pointer;
+            color: #999;
+            font-size: 24px;
+        }
+        
+        .photo-count {
+            position: absolute;
+            top: 6px;
+            right: 6px;
+            background: rgba(0,0,0,0.5);
+            color: #fff;
+            padding: 2px 8px;
+            border-radius: 10px;
+            font-size: 10px;
+        }
+        
+        /* Diary Page */
+        .diary-entry {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 16px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.08);
+        }
+        
+        .diary-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+        
+        .diary-author {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .diary-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 14px;
+        }
+        
+        .diary-author-name {
+            font-weight: 600;
+            font-size: 14px;
+            color: var(--dark);
+        }
+        
+        .diary-date {
+            font-size: 11px;
+            color: var(--muted);
+        }
+        
+        .diary-content {
+            font-size: 13px;
+            line-height: 1.8;
+            color: var(--text);
+        }
+        
+        .diary-mood {
+            font-size: 24px;
+            margin-top: 12px;
+        }
+        
+        .diary-music {
+            margin-top: 12px;
+            padding: 12px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .music-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .music-info {
+            flex: 1;
+        }
+        
+        .music-title {
+            font-size: 13px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .music-desc {
+            font-size: 11px;
+            color: var(--muted);
+        }
+        
+        /* Expense Page */
+        .expense-summary {
+            background: linear-gradient(135deg, var(--primary), #0077B6);
+            color: #fff;
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+        
+        .expense-summary h3 {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-bottom: 8px;
+        }
+        
+        .expense-total {
+            font-size: 32px;
+            font-weight: 700;
+        }
+        
+        .expense-per-person {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .expense-per-person span {
+            font-size: 12px;
+            opacity: 0.8;
+        }
+        
+        .expense-per-person strong {
+            font-size: 16px;
+        }
+        
+        /* Expense List */
+        .expense-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 14px;
+            background: #fff;
+            border-radius: 12px;
+            margin-bottom: 10px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+        }
+        
+        .expense-icon {
+            width: 44px;
+            height: 44px;
+            border-radius: 12px;
+            background: linear-gradient(135deg, rgba(0,180,216,0.1), rgba(144,224,239,0.1));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+        }
+        
+        .expense-details {
+            flex: 1;
+        }
+        
+        .expense-details h4 {
+            font-size: 14px;
+            color: var(--dark);
+        }
+        
+        .expense-details p {
+            font-size: 11px;
+            color: var(--muted);
+        }
+        
+        .expense-amount {
+            font-size: 16px;
+            font-weight: 700;
+            color: var(--success);
+        }
+        
+        /* Settlement */
+        .settlement-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+        
+        .settlement-card h4 {
+            font-size: 14px;
+            color: var(--dark);
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .member-balance {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        
+        .member-balance:last-child {
+            border-bottom: none;
+        }
+        
+        .member-balance .name {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 13px;
+        }
+        
+        .member-balance .amount {
+            font-weight: 600;
+        }
+        
+        .member-balance .amount.positive { color: var(--success); }
+        .member-balance .amount.negative { color: var(--accent); }
+        
+        /* Add Button */
+        .fab {
+            position: fixed;
+            bottom: 80px;
+            right: 16px;
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            color: #fff;
+            font-size: 28px;
+            box-shadow: 0 4px 20px rgba(0,180,216,0.4);
+            cursor: pointer;
+            z-index: 999;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        /* Modal */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            z-index: 2000;
+            align-items: flex-end;
+            justify-content: center;
+        }
+        
+        .modal.active {
+            display: flex;
+        }
+        
+        .modal-content {
+            background: var(--card-bg);
+            border-radius: 24px 24px 0 0;
+            width: 100%;
+            max-width: 500px;
+            max-height: 90vh;
+            overflow-y: auto;
+            padding: 24px;
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+        
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .modal-header h3 {
+            font-size: 18px;
+            color: var(--dark);
+        }
+        
+        .modal-close {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background: #f0f0f0;
+            border: none;
+            font-size: 18px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 12px;
+            color: var(--muted);
+            margin-bottom: 6px;
+        }
+        
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            background: #f8f9fa;
+        }
+        
+        .form-group textarea {
+            min-height: 80px;
+            resize: vertical;
+        }
+        
+        .payer-options {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        
+        .payer-option {
+            padding: 10px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            text-align: center;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.3s;
+        }
+        
+        .payer-option.selected {
+            border-color: var(--primary);
+            background: rgba(0,180,216,0.1);
+            color: var(--primary);
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 14px;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            border-radius: 12px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+        
+        /* Team Page */
+        .member-card {
+            background: var(--card-bg);
+            border-radius: 16px;
+            padding: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 14px;
+        }
+        
+        .member-card .avatar {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 22px;
+        }
+        
+        .member-card .info {
+            flex: 1;
+        }
+        
+        .member-card .name {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--dark);
+        }
+        
+        .member-card .role {
+            font-size: 12px;
+            color: var(--primary);
+        }
+        
+        .member-card .stats {
+            text-align: right;
+            font-size: 11px;
+            color: var(--muted);
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--muted);
+        }
+        
+        .empty-state .icon {
+            font-size: 48px;
+            margin-bottom: 12px;
+        }
+        
+        .empty-state p {
+            font-size: 13px;
+        }
+        
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 20px;
+            color: var(--muted);
+        }
+        
+        /* Photo Upload */
+        .upload-area {
+            border: 2px dashed var(--primary);
+            border-radius: 16px;
+            padding: 30px;
+            text-align: center;
+            cursor: pointer;
+            margin: 12px 0;
+        }
+        
+        .upload-area .icon {
+            font-size: 36px;
+            margin-bottom: 8px;
+        }
+        
+        .upload-area p {
+            font-size: 13px;
+            color: var(--muted);
+        }
+        
+        /* Play Button for Music */
+        .play-btn {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            border: none;
+            color: #fff;
+            font-size: 16px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+        
+        .play-btn:active {
+            transform: scale(0.95);
+        }
+        
+        .play-btn.playing {
+            animation: pulse 1s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+        
+        /* Desktop Enhancement */
+        @media (min-width: 768px) {
+            .container {
+                max-width: 600px;
+                margin: 0 auto;
+            }
+            
+            .hero h1 { font-size: 28px; }
+            
+            .photo-grid {
+                grid-template-columns: repeat(4, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Home Page -->
+        <div class="page active" id="page-home">
+            <div class="hero">
+                <h1>🇳🇿 <span>新西兰之旅</span></h1>
+                <p class="subtitle">2026.4.26 - 5.7 · 南北岛12日9晚</p>
+                <div class="hero-badges">
+                    <span class="badge">📍 Day 4</span>
+                    <span class="badge">📷 12张</span>
+                    <span class="badge">💰 ¥8,420</span>
+                </div>
+            </div>
+            
+            <!-- Calendar Selector -->
+            <div class="calendar-nav" id="calendarNav">
+                <div class="calendar-header">
+                    <span class="cal-month">4月</span>
+                    <span class="cal-year">2026</span>
+                </div>
+                <div class="calendar-grid">
+                    <span class="cal-day-name">日</span>
+                    <span class="cal-day-name">一</span>
+                    <span class="cal-day-name">二</span>
+                    <span class="cal-day-name">三</span>
+                    <span class="cal-day-name">四</span>
+                    <span class="cal-day-name">五</span>
+                    <span class="cal-day-name">六</span>
+                </div>
+                <div class="calendar-days" id="calendarDays"></div>
+            </div>
+            
+            <style>
+                .calendar-nav {
+                    background: linear-gradient(135deg, rgba(0,180,216,0.15), rgba(144,224,239,0.08));
+                    border-radius: 16px;
+                    padding: 16px;
+                    margin: 12px 0;
+                }
+                .calendar-header {
+                    display: flex;
+                    align-items: baseline;
+                    gap: 6px;
+                    margin-bottom: 12px;
+                }
+                .cal-month {
+                    font-size: 18px;
+                    font-weight: 600;
+                    color: white;
+                }
+                .cal-year {
+                    font-size: 13px;
+                    color: rgba(255,255,255,0.5);
+                }
+                .calendar-grid {
+                    display: grid;
+                    grid-template-columns: repeat(7, 1fr);
+                    gap: 4px;
+                    text-align: center;
+                    margin-bottom: 8px;
+                }
+                .cal-day-name {
+                    font-size: 10px;
+                    color: rgba(255,255,255,0.4);
+                    padding: 4px 0;
+                }
+                .calendar-days {
+                    display: grid;
+                    grid-template-columns: repeat(7, 1fr);
+                    gap: 4px;
+                }
+                .cal-day {
+                    aspect-ratio: 1;
+                    display: flex;
+                    flex-direction: column;
+                    align-items: center;
+                    justify-content: center;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    font-size: 12px;
+                }
+                .cal-day.empty {
+                    cursor: default;
+                }
+                .cal-day .day-num {
+                    font-size: 14px;
+                    font-weight: 600;
+                }
+                .cal-day .day-label {
+                    font-size: 9px;
+                    opacity: 0.6;
+                }
+                .cal-day.past {
+                    background: rgba(255,255,255,0.08);
+                    color: rgba(255,255,255,0.5);
+                }
+                .cal-day.today {
+                    background: var(--primary);
+                    color: white;
+                    box-shadow: 0 4px 12px rgba(0,180,216,0.4);
+                }
+                .cal-day.future {
+                    background: rgba(255,255,255,0.12);
+                    color: rgba(255,255,255,0.8);
+                }
+                .cal-day.selected {
+                    background: linear-gradient(135deg, var(--primary), var(--accent));
+                    color: white;
+                    transform: scale(1.08);
+                    box-shadow: 0 4px 16px rgba(0,180,216,0.5);
+                }
+                .cal-day:not(.empty):not(.today):hover {
+                    background: rgba(255,255,255,0.2);
+                    transform: scale(1.05);
+                }
+                .cal-day.today.selected {
+                    background: linear-gradient(135deg, var(--primary), var(--accent));
+                }
+            </style>
+            
+            <script>
+                // 行程日期配置 (2026年4月28日 - 5月9日)
+                const tripConfig = {
+                    startDate: new Date(2026, 3, 28), // 4月28日
+                    endDate: new Date(2026, 4, 9),    // 5月9日
+                    currentDay: 4  // 当前是第4天 (4月28+3=5月1日)
+                };
+                
+                function renderCalendar() {
+                    const container = document.getElementById('calendarDays');
+                    const start = tripConfig.startDate;
+                    const today = new Date();
+                    today.setHours(0, 0, 0, 0);
+                    
+                    // 计算这个月的日历位置
+                    const firstDayOfMonth = new Date(start.getFullYear(), start.getMonth(), 1);
+                    const startDayOfWeek = firstDayOfMonth.getDay();
+                    
+                    let html = '';
+                    
+                    // 空格子 (补齐前面的日期)
+                    for (let i = 0; i < startDayOfWeek; i++) {
+                        html += '<div class="cal-day empty"></div>';
+                    }
+                    
+                    // 遍历整个行程的所有日期
+                    const current = new Date(start);
+                    let dayIndex = 1;
+                    while (current <= tripConfig.endDate) {
+                        const isToday = current.getTime() === today.getTime();
+                        const isPast = current < today;
+                        const isFuture = current > today;
+                        const isSelected = current.getTime() === today.getTime();
+                        const dayOfWeek = ['日','一','二','三','四','五','六'][current.getDay()];
+                        
+                        let classes = 'cal-day';
+                        if (isToday) classes += ' today selected';
+                        else if (isPast) classes += ' past';
+                        else classes += ' future';
+                        
+                        html += `<div class="${classes}" data-date="${current.toISOString().split('T')[0]}" onclick="selectDay(this)">
+                            <span class="day-num">${current.getDate()}</span>
+                            <span class="day-label">D${dayIndex}</span>
+                        </div>`;
+                        
+                        current.setDate(current.getDate() + 1);
+                        dayIndex++;
+                    }
+                    
+                    container.innerHTML = html;
+                }
+                
+                function selectDay(el) {
+                    document.querySelectorAll('.cal-day').forEach(d => d.classList.remove('selected'));
+                    el.classList.add('selected');
+                    const date = el.dataset.date;
+                    const dayNum = el.querySelector('.day-label').textContent;
+                    console.log('选中:', date, dayNum);
+                    // TODO: 根据选中日期更新页面内容
+                    showToast(`已切换到${date.slice(5)} ${dayNum}`);
+                }
+                
+                renderCalendar();
+            </script>
+            
+            <!-- Quick Actions -->
+            <div class="card">
+                <div class="card-title">
+                    <span class="emoji">⚡</span>
+                    快捷操作
+                </div>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; margin-top: 12px;">
+                    <div class="info-item" style="cursor: pointer;" onclick="showModal('photo')">
+                        <span style="font-size: 24px;">📷</span>
+                        <div class="value">上传照片</div>
+                    </div>
+                    <div class="info-item" style="cursor: pointer;" onclick="showModal('expense')">
+                        <span style="font-size: 24px;">💰</span>
+                        <div class="value">记一笔</div>
+                    </div>
+                    <div class="info-item" style="cursor: pointer;" onclick="showModal('diary')">
+                        <span style="font-size: 24px;">📝</span>
+                        <div class="value">写日记</div>
+                    </div>
+                    <div class="info-item" style="cursor: pointer;" onclick="switchTab('diary')">
+                        <span style="font-size: 24px;">🎵</span>
+                        <div class="value">听日记</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Today Preview -->
+            <div class="card" onclick="switchTab('day')">
+                <div class="day-hero">
+                    <img src="https://images.unsplash.com/photo-1507699622108-4be3abd695ad?w=600&q=80" alt="基督城">
+                    <div class="day-hero-overlay">
+                        <h2>Day 4 · 基督城 → 奥马鲁</h2>
+                        <p>📅 4月29日 · 企鹅归巢日</p>
+                    </div>
+                </div>
+                <div class="locations">
+                    <span class="location-pill">🏛️ 基督城 <span class="arrow">→</span></span>
+                    <span class="location-pill">🐧 奥马鲁</span>
+                </div>
+                <div class="info-grid">
+                    <div class="info-item">
+                        <div class="label">早餐</div>
+                        <div class="value">酒店早餐</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">午餐</div>
+                        <div class="value">三文鱼餐</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">晚餐</div>
+                        <div class="value">岩石烧烤</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="label">住宿</div>
+                        <div class="value">Heritage Court</div>
+                    </div>
+                </div>
+                <div class="highlight-box">
+                    <h4>🏆 今日亮点</h4>
+                    <p>上午漫步「英国之外最像英国的城市」基督城，傍晚抵达奥马鲁观赏世界最小的蓝企鹅归巢——最多一夜200+只！</p>
+                </div>
+                <div style="color: var(--primary); font-size: 13px; font-weight: 600; display: flex; align-items: center; gap: 6px;">
+                    <span>👆</span> 点击查看完整行程 & AI 创意建议
+                </div>
+            </div>
+        </div>
+        
+        <!-- Day Detail Page -->
+        <div class="page" id="page-day">
+            <div class="day-hero">
+                <img src="https://images.unsplash.com/photo-1507699622108-4be3abd695ad?w=600&q=80" alt="基督城">
+                <div class="day-hero-overlay">
+                    <h2 id="day-title">Day 4 · 基督城 → 奥马鲁</h2>
+                    <p id="day-date">📅 4月29日 · 周二</p>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="locations">
+                    <span class="location-pill">🏛️ 基督城 <span class="arrow">→</span></span>
+                    <span class="location-pill">🐧 奥马鲁</span>
+                </div>
+                <div class="info-grid">
+                    <div class="info-item"><div class="label">早餐</div><div class="value">酒店早餐</div></div>
+                    <div class="info-item"><div class="label">午餐</div><div class="value">三文鱼餐</div></div>
+                    <div class="info-item"><div class="label">晚餐</div><div class="value">岩石烧烤</div></div>
+                    <div class="info-item"><div class="label">住宿</div><div class="value">Heritage Court</div></div>
+                </div>
+            </div>
+            
+            <!-- Attractions -->
+            <div class="card">
+                <div class="card-title"><span class="emoji">📍</span> 今日景点</div>
+                <div style="display: grid; gap: 12px;">
+                    <div style="display: flex; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 12px;">
+                        <img src="https://images.unsplash.com/photo-1507699622108-4be3abd695ad?w=100&q=80" style="width: 70px; height: 70px; border-radius: 10px; object-fit: cover;">
+                        <div>
+                            <h4 style="font-size: 13px; color: var(--dark);">雅芳河畔</h4>
+                            <p style="font-size: 11px; color: var(--muted);">14公里河流穿城而过，被称为「英国之外最像英国的城市」</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 12px;">
+                        <img src="https://images.unsplash.com/photo-1508193638397-1c4234db14d8?w=100&q=80" style="width: 70px; height: 70px; border-radius: 10px; object-fit: cover;">
+                        <div>
+                            <h4 style="font-size: 13px; color: var(--dark);">摩拉基大圆石</h4>
+                            <p style="font-size: 11px; color: var(--muted);">50多个巨大圆石蛋，退潮时露出，形状之圆令人惊叹</p>
+                        </div>
+                    </div>
+                    <div style="display: flex; gap: 12px; padding: 12px; background: #f8f9fa; border-radius: 12px;">
+                        <img src="https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=100&q=80" style="width: 70px; height: 70px; border-radius: 10px; object-fit: cover;">
+                        <div>
+                            <h4 style="font-size: 13px; color: var(--dark);">蓝企鹅归巢</h4>
+                            <p style="font-size: 11px; color: var(--muted);">世界最小企鹅，日落后归巢，最多一夜200+只！</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- AI Creative Tips -->
+            <div class="ai-tips">
+                <div class="ai-tips-header">
+                    <span>💡</span> AI 行程参谋 · 创意建议
+                </div>
+                <div class="tip-item">
+                    <div class="tip-icon">📸</div>
+                    <div class="tip-content">
+                        <h5>📷 企鹅摄影大赛</h5>
+                        <p>在保护中心拍一张「创意借位」照片——6人围成一圈，让企鹅从中间穿过，拍下「企鹅包围人类」的有趣画面！晚上投票评选最佳作品。</p>
+                    </div>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-icon">🍽️</div>
+                    <div class="tip-content">
+                        <h5>🦞 岩石烧烤隐藏菜单</h5>
+                        <p>问服务员有没有「海鲜拼盘+岩石烤羊排」的组合，点完记得拍照发群里馋馋没来的朋友！</p>
+                    </div>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-icon">🌟</div>
+                    <div class="tip-content">
+                        <h5>🎬 今日Vlog素材</h5>
+                        <p>用手机拍一段「从凯库拉到奥马鲁的车上延时」——窗外从海边悬崖变成牧场草地，配上「我们一路向南」的音乐。</p>
+                    </div>
+                </div>
+                <div class="tip-item">
+                    <div class="tip-icon">🎯</div>
+                    <div class="tip-content">
+                        <h5>🎁 伴手礼情报</h5>
+                        <p>奥马鲁有家很棒的手工巧克力店「Murray's」，比机场便宜30%，今晚吃完烧烤顺路去买！</p>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Music -->
+            <div class="card">
+                <div class="card-title"><span class="emoji">🎵</span> 今日主题歌</div>
+                <div class="diary-music">
+                    <button class="music-btn" id="music-toggle" onclick="toggleMusic()">▶</button>
+                    <div class="music-info">
+                        <div class="music-title">「南半球的风」- Day 4 特别版</div>
+                        <div class="music-desc">🎸 温暖民谣 · 适合傍晚海边漫步</div>
+                    </div>
+                </div>
+                <p style="font-size: 11px; color: var(--muted); margin-top: 10px;">
+                    🌊 歌词精选：「企鹅回家的路，我们也在走，海风吹过奥马鲁，带走所有烦恼...」
+                </p>
+            </div>
+            
+            <!-- Weather -->
+            <div class="card">
+                <div class="card-title"><span class="emoji">🌤️</span> 今日天气</div>
+                <div style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; text-align: center;">
+                    <div>
+                        <div style="font-size: 28px;">⛅</div>
+                        <div style="font-size: 12px;">14°C</div>
+                        <div style="font-size: 10px; color: var(--muted);">基督城</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 28px;">🌤️</div>
+                        <div style="font-size: 12px;">16°C</div>
+                        <div style="font-size: 10px; color: var(--muted);">摩拉基</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 28px;">🌙</div>
+                        <div style="font-size: 12px;">8°C</div>
+                        <div style="font-size: 10px; color: var(--muted);">奥马鲁</div>
+                    </div>
+                    <div>
+                        <div style="font-size: 28px;">💨</div>
+                        <div style="font-size: 12px;">15km/h</div>
+                        <div style="font-size: 10px; color: var(--muted);">西风</div>
+                    </div>
+                </div>
+                <p style="font-size: 11px; color: var(--accent); margin-top: 10px;">⚠️ 傍晚观看企鹅记得带外套，海边风大！</p>
+            </div>
+        </div>
+        
+        <!-- Photo Page -->
+        <div class="page" id="page-photo">
+            <div class="card">
+                <div class="card-title"><span class="emoji">📷</span> 旅行照片墙</div>
+                <p style="font-size: 12px; color: var(--muted); margin-top: 4px;">每个成员都有专属相册空间</p>
+            </div>
+            
+            <!-- Member 1: 陈飞杰 -->
+            <div class="member-photos">
+                <div class="member-header">
+                    <div class="member-avatar">👨</div>
+                    <div class="member-info">
+                        <h4>陈飞杰</h4>
+                        <p>领队 · 12张照片</p>
+                    </div>
+                </div>
+                <div class="photo-grid">
+                    <div class="photo-item">
+                        <img src="https://images.unsplash.com/photo-1507699622108-4be3abd695ad?w=200&q=80">
+                        <span class="photo-count">📍 基督城</span>
+                    </div>
+                    <div class="photo-item">
+                        <img src="https://images.unsplash.com/photo-1508193638397-1c4234db14d8?w=200&q=80">
+                        <span class="photo-count">📍 凯库拉</span>
+                    </div>
+                    <div class="photo-item" onclick="showModal('photo')">
+                        <button class="add-btn">+</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Member 2: 施蓉 -->
+            <div class="member-photos">
+                <div class="member-header">
+                    <div class="member-avatar">👩</div>
+                    <div class="member-info">
+                        <h4>施蓉</h4>
+                        <p>团员 · 8张照片</p>
+                    </div>
+                </div>
+                <div class="photo-grid">
+                    <div class="photo-item">
+                        <img src="https://images.unsplash.com/photo-1507699622108-4be3abd695ad?w=200&q=80">
+                        <span class="photo-count">📍 基督城</span>
+                    </div>
+                    <div class="photo-item" onclick="showModal('photo')">
+                        <button class="add-btn">+</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Member 3: 洪亮 -->
+            <div class="member-photos">
+                <div class="member-header">
+                    <div class="member-avatar">👨</div>
+                    <div class="member-info">
+                        <h4>洪亮</h4>
+                        <p>系统管理员 · 5张照片</p>
+                    </div>
+                </div>
+                <div class="photo-grid">
+                    <div class="photo-item" onclick="showModal('photo')">
+                        <button class="add-btn">+</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Member 4: 蔡磊 -->
+            <div class="member-photos">
+                <div class="member-header">
+                    <div class="member-avatar">👨</div>
+                    <div class="member-info">
+                        <h4>蔡磊</h4>
+                        <p>团员 · 3张照片</p>
+                    </div>
+                </div>
+                <div class="photo-grid">
+                    <div class="photo-item" onclick="showModal('photo')">
+                        <button class="add-btn">+</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Member 5: 戴岭 -->
+            <div class="member-photos">
+                <div class="member-header">
+                    <div class="member-avatar">👨</div>
+                    <div class="member-info">
+                        <h4>戴岭</h4>
+                        <p>团员 · 7张照片</p>
+                    </div>
+                </div>
+                <div class="photo-grid">
+                    <div class="photo-item" onclick="showModal('photo')">
+                        <button class="add-btn">+</button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Member 6: 周行 -->
+            <div class="member-photos">
+                <div class="member-header">
+                    <div class="member-avatar">👨</div>
+                    <div class="member-info">
+                        <h4>周行</h4>
+                        <p>团员 · 4张照片</p>
+                    </div>
+                </div>
+                <div class="photo-grid">
+                    <div class="photo-item" onclick="showModal('photo')">
+                        <button class="add-btn">+</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Diary Page -->
+        <div class="page" id="page-diary">
+            <div class="card">
+                <div class="card-title"><span class="emoji">📝</span> 心路历程</div>
+                <p style="font-size: 12px; color: var(--muted); margin-top: 4px;">AI 根据行程、照片与日记片段生成</p>
+            </div>
+            
+            <!-- Day 4 Diary -->
+            <div class="diary-entry">
+                <div class="diary-header">
+                    <div class="diary-author">
+                        <div class="diary-avatar">🤖</div>
+                        <div>
+                            <div class="diary-author-name">AI 日记 · Day 4</div>
+                            <div class="diary-date">2026年4月29日</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="diary-content">
+                    <p>「从基督城的雅芳河畔出发，我们六个人的笑声回荡在这座「英国之外最像英国的城市」。纸板教堂的创意让人感动——地震可以摧毁建筑，却摧毁不了人们的想象力。</p>
+                    <p style="margin-top: 10px;">傍晚抵达奥马鲁，海边的风带着咸味。远处的企鹅保护中心亮起了微弱的灯光，所有人都屏住了呼吸——那是世界最小的蓝企鹅，正在回家。」</p>
+                </div>
+                <div class="diary-mood">🌊🐧✨</div>
+                <div class="diary-music">
+                    <button class="music-btn" onclick="playDayMusic(4)">▶</button>
+                    <div class="music-info">
+                        <div class="music-title">「南半球的风」- Day 4</div>
+                        <div class="music-desc">🎸 温暖民谣 · 3:24</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Day 3 Diary -->
+            <div class="diary-entry">
+                <div class="diary-header">
+                    <div class="diary-author">
+                        <div class="diary-avatar">🤖</div>
+                        <div>
+                            <div class="diary-author-name">AI 日记 · Day 3</div>
+                            <div class="diary-date">2026年4月28日</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="diary-content">
+                    <p>「凯库拉的清晨，海豹在礁石上懒洋洋地晒太阳。我们六个人挤在观鲸船上，当那只18米长的抹香鲸从海底跃起喷水时，所有人都尖叫了！</p>
+                    <p style="margin-top: 10px;">施蓉说她看到了海豚，蔡磊说他被海风吹成了表情包，洪亮全程举着GoPro——这就是旅行的意义吧，在世界的某个角落，和重要的人一起见证奇迹。」</p>
+                </div>
+                <div class="diary-mood">🐋🦭😆</div>
+                <div class="diary-music">
+                    <button class="music-btn" onclick="playDayMusic(3)">▶</button>
+                    <div class="music-info">
+                        <div class="music-title">「鲸鱼之歌」- Day 3</div>
+                        <div class="music-desc">🌊 海洋蓝调 · 4:12</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Day 2 Diary -->
+            <div class="diary-entry">
+                <div class="diary-header">
+                    <div class="diary-author">
+                        <div class="diary-avatar">🤖</div>
+                        <div>
+                            <div class="diary-author-name">AI 日记 · Day 2</div>
+                            <div class="diary-date">2026年4月27日</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="diary-content">
+                    <p>「从奥克兰转机到基督城，再驱车前往凯库拉。一路上风景从城市变成牧场，再变成海岸线。领队陈飞杰说：「新西兰的美，就是这么直接。」</p>
+                    <p style="margin-top: 10px;">晚上入住 Lobster Inn Motel，晚餐是半只龙虾。施蓉说这是她吃过最新鲜的龙虾，周行说要把壳留作纪念——当然，他只是在开玩笑...吧？」</p>
+                </div>
+                <div class="diary-mood">🦞🏔️🤩</div>
+                <div class="diary-music">
+                    <button class="music-btn" onclick="playDayMusic(2)">▶</button>
+                    <div class="music-info">
+                        <div class="music-title">「启程」- Day 2</div>
+                        <div class="music-desc">🚗 公路民谣 · 3:45</div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Team Summary -->
+            <div class="diary-entry" style="background: linear-gradient(135deg, rgba(0,180,216,0.05), rgba(144,224,239,0.05));">
+                <div class="diary-header">
+                    <div class="diary-author">
+                        <div class="diary-avatar" style="background: linear-gradient(135deg, #FF6B6B, #FFE66D);">👥</div>
+                        <div>
+                            <div class="diary-author-name">团队心路 · 前3天汇总</div>
+                            <div class="diary-date">4月27日 - 4月29日</div>
+                        </div>
+                    </div>
+                </div>
+                <div class="diary-content">
+                    <p>「三天的时间，六个人从陌生到熟悉。洪亮负责技术（导航、拍照、充电宝），施蓉负责审美（穿搭、构图、选滤镜），蔡磊负责美食（点菜、探店、找夜宵），戴岭负责搞笑（冷笑话、表情包、整蛊视频），周行负责记录（日记、Vlog、朋友圈），领队陈飞杰负责所有我们搞不定的事。</p>
+                    <p style="margin-top: 10px;">新西兰的美景让人忘记烦恼，但更珍贵的是，这群人愿意和你一起走这一程。」</p>
+                </div>
+                <div class="diary-mood">👫🌟❤️</div>
+            </div>
+        </div>
+        
+        <!-- Expense Page -->
+        <div class="page" id="page-expense">
+            <div class="expense-summary">
+                <h3>💰 旅途总支出</h3>
+                <div class="expense-total">¥ 8,420</div>
+                <div class="expense-per-person">
+                    <span>人均应缴</span>
+                    <strong>¥ 1,403.33</strong>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title"><span class="emoji">📊</span> 实时结算</div>
+                <div class="settlement-card" style="box-shadow: none; padding: 0;">
+                    <div class="member-balance">
+                        <span class="name">👨 陈飞杰</span>
+                        <span class="amount negative">-¥680</span>
+                        <span style="font-size: 10px; color: var(--accent);">还需补缴</span>
+                    </div>
+                    <div class="member-balance">
+                        <span class="name">👩 施蓉</span>
+                        <span class="amount positive">+¥220</span>
+                        <span style="font-size: 10px; color: var(--success);">应退</span>
+                    </div>
+                    <div class="member-balance">
+                        <span class="name">👨 洪亮</span>
+                        <span class="amount positive">+¥150</span>
+                        <span style="font-size: 10px; color: var(--success);">应退</span>
+                    </div>
+                    <div class="member-balance">
+                        <span class="name">👨 蔡磊</span>
+                        <span class="amount negative">-¥350</span>
+                        <span style="font-size: 10px; color: var(--accent);">还需补缴</span>
+                    </div>
+                    <div class="member-balance">
+                        <span class="name">👨 戴岭</span>
+                        <span class="amount negative">-¥200</span>
+                        <span style="font-size: 10px; color: var(--accent);">还需补缴</span>
+                    </div>
+                    <div class="member-balance">
+                        <span class="name">👨 周行</span>
+                        <span class="amount positive">+¥510</span>
+                        <span style="font-size: 10px; color: var(--success);">应退</span>
+                    </div>
+                </div>
+                <p style="font-size: 11px; color: var(--muted); margin-top: 12px; text-align: center;">
+                    🎯 旅程结束后，多退少补，AA制结算
+                </p>
+            </div>
+            
+            <div class="card">
+                <div class="card-title"><span class="emoji">📝</span> 消费记录</div>
+            </div>
+            
+            <div class="expense-item">
+                <div class="expense-icon">🦞</div>
+                <div class="expense-details">
+                    <h4>Day2 晚餐 · 半只龙虾餐</h4>
+                    <p>陈飞杰 付款 · 凯库拉 Lobster Inn</p>
+                </div>
+                <div class="expense-amount">¥1,680</div>
+            </div>
+            
+            <div class="expense-item">
+                <div class="expense-icon">🐋</div>
+                <div class="expense-details">
+                    <h4>Day3 观鲸船票 × 6</h4>
+                    <p>施蓉 付款 · 凯库拉出海</p>
+                </div>
+                <div class="expense-amount">¥1,500</div>
+            </div>
+            
+            <div class="expense-item">
+                <div class="expense-icon">🦭</div>
+                <div class="expense-details">
+                    <h4>Day3 海狮区门票</h4>
+                    <p>洪亮 付款 · 凯库拉</p>
+                </div>
+                <div class="expense-amount">¥240</div>
+            </div>
+            
+            <div class="expense-item">
+                <div class="expense-icon">🍽️</div>
+                <div class="expense-details">
+                    <h4>Day3 晚餐 · 中式团餐</h4>
+                    <p>周行 付款 · 基督城</p>
+                </div>
+                <div class="expense-amount">¥960</div>
+            </div>
+            
+            <div class="expense-item">
+                <div class="expense-icon">🍳</div>
+                <div class="expense-details">
+                    <h4>Day4 早餐 · 酒店自助</h4>
+                    <p>蔡磊 付款 · Heritage Court</p>
+                </div>
+                <div class="expense-amount">¥480</div>
+            </div>
+            
+            <div class="expense-item">
+                <div class="expense-icon">🐧</div>
+                <div class="expense-details">
+                    <h4>Day4 企鹅中心门票</h4>
+                    <p>戴岭 付款 · 奥马鲁</p>
+                </div>
+                <div class="expense-amount">¥600</div>
+            </div>
+            
+            <div class="expense-item">
+                <div class="expense-icon">🍖</div>
+                <div class="expense-details">
+                    <h4>Day4 晚餐 · 岩石烧烤</h4>
+                    <p>陈飞杰 付款 · 奥马鲁</p>
+                </div>
+                <div class="expense-amount">¥1,320</div>
+            </div>
+            
+            <div class="expense-item">
+                <div class="expense-icon">🏨</div>
+                <div class="expense-details">
+                    <h4>Day4 住宿 · Heritage Court</h4>
+                    <p>洪亮 付款 · 信用卡担保</p>
+                </div>
+                <div class="expense-amount">¥1,640</div>
+            </div>
+        </div>
+        
+        <!-- Team Page -->
+        <div class="page" id="page-team">
+            <div class="card">
+                <div class="card-title"><span class="emoji">👥</span> 6人小分队</div>
+                <p style="font-size: 12px; color: var(--muted); margin-top: 4px;">领队：陈飞杰 | 系统管理员：洪亮</p>
+            </div>
+            
+            <div class="member-card">
+                <div class="avatar">👨</div>
+                <div class="info">
+                    <div class="name">陈飞杰</div>
+                    <div class="role">领队</div>
+                </div>
+                <div class="stats">
+                    <div>📷 12张</div>
+                    <div>💰 ¥2,680</div>
+                </div>
+            </div>
+            
+            <div class="member-card">
+                <div class="avatar">👩</div>
+                <div class="info">
+                    <div class="name">施蓉</div>
+                    <div class="role">团员</div>
+                </div>
+                <div class="stats">
+                    <div>📷 8张</div>
+                    <div>💰 ¥1,500</div>
+                </div>
+            </div>
+            
+            <div class="member-card">
+                <div class="avatar">👨</div>
+                <div class="info">
+                    <div class="name">洪亮</div>
+                    <div class="role">系统管理员</div>
+                </div>
+                <div class="stats">
+                    <div>📷 5张</div>
+                    <div>💰 ¥1,880</div>
+                </div>
+            </div>
+            
+            <div class="member-card">
+                <div class="avatar">👨</div>
+                <div class="info">
+                    <div class="name">蔡磊</div>
+                    <div class="role">团员</div>
+                </div>
+                <div class="stats">
+                    <div>📷 3张</div>
+                    <div>💰 ¥480</div>
+                </div>
+            </div>
+            
+            <div class="member-card">
+                <div class="avatar">👨</div>
+                <div class="info">
+                    <div class="name">戴岭</div>
+                    <div class="role">团员</div>
+                </div>
+                <div class="stats">
+                    <div>📷 7张</div>
+                    <div>💰 ¥600</div>
+                </div>
+            </div>
+            
+            <div class="member-card">
+                <div class="avatar">👨</div>
+                <div class="info">
+                    <div class="name">周行</div>
+                    <div class="role">团员</div>
+                </div>
+                <div class="stats">
+                    <div>📷 4张</div>
+                    <div>💰 ¥1,280</div>
+                </div>
+            </div>
+            
+            <div class="card">
+                <div class="card-title"><span class="emoji">📞</span> 紧急联系方式</div>
+                <p style="font-size: 13px; color: var(--dark); margin-top: 8px;">
+                    <strong>领队：陈飞杰</strong><br>
+                    📱 13901666813<br><br>
+                    <strong>地接社：</strong>Grand Aust NZ PTY ltd<br>
+                    📱 Debra: 0276668909
+                </p>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+        <div class="nav-item active" data-page="home" onclick="switchTab('home')">
+            <span class="icon">🏠</span>
+            <span>首页</span>
+        </div>
+        <div class="nav-item" data-page="day" onclick="switchTab('day')">
+            <span class="icon">📅</span>
+            <span>行程</span>
+        </div>
+        <div class="nav-item" data-page="photo" onclick="switchTab('photo')">
+            <span class="icon">📷</span>
+            <span>照片</span>
+        </div>
+        <div class="nav-item" data-page="diary" onclick="switchTab('diary')">
+            <span class="icon">📝</span>
+            <span>日记</span>
+        </div>
+        <div class="nav-item" data-page="expense" onclick="switchTab('expense')">
+            <span class="icon">💰</span>
+            <span>记账</span>
+        </div>
+        <div class="nav-item" data-page="team" onclick="switchTab('team')">
+            <span class="icon">👥</span>
+            <span>团队</span>
+        </div>
+    </nav>
+    
+    <!-- FAB Button -->
+    <button class="fab" onclick="showModal('expense')">+</button>
+    
+    <!-- Photo Upload Modal -->
+    <div class="modal" id="modal-photo">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📷 上传照片</h3>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div class="upload-area" onclick="document.getElementById('photo-input').click()">
+                <div class="icon">📤</div>
+                <p>点击上传或拖拽照片</p>
+                <p style="font-size: 11px;">支持 JPG、PNG，最大 10MB</p>
+            </div>
+            <input type="file" id="photo-input" accept="image/*" multiple style="display:none" onchange="handlePhotoUpload(this.files)">
+            <div class="form-group">
+                <label>照片描述（可选）</label>
+                <input type="text" id="photo-desc" placeholder="例如：基督城雅芳河畔">
+            </div>
+            <button class="submit-btn" onclick="submitPhoto()">上传</button>
+        </div>
+    </div>
+    
+    <!-- Expense Modal -->
+    <div class="modal" id="modal-expense">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>💰 记一笔</h3>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div class="form-group">
+                <label>消费内容</label>
+                <input type="text" id="expense-desc" placeholder="例如：晚餐、海鲜大餐">
+            </div>
+            <div class="form-group">
+                <label>金额 (¥)</label>
+                <input type="number" id="expense-amount" placeholder="0.00">
+            </div>
+            <div class="form-group">
+                <label>付款人</label>
+                <div class="payer-options">
+                    <div class="payer-option selected" onclick="selectPayer(this, '陈飞杰')">👨 陈飞杰</div>
+                    <div class="payer-option" onclick="selectPayer(this, '施蓉')">👩 施蓉</div>
+                    <div class="payer-option" onclick="selectPayer(this, '洪亮')">👨 洪亮</div>
+                    <div class="payer-option" onclick="selectPayer(this, '蔡磊')">👨 蔡磊</div>
+                    <div class="payer-option" onclick="selectPayer(this, '戴岭')">👨 戴岭</div>
+                    <div class="payer-option" onclick="selectPayer(this, '周行')">👨 周行</div>
+                </div>
+            </div>
+            <button class="submit-btn" onclick="submitExpense()">记一笔</button>
+        </div>
+    </div>
+    
+    <!-- Diary Modal -->
+    <div class="modal" id="modal-diary">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>📝 写日记</h3>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div class="form-group">
+                <label>今天最难忘的事</label>
+                <textarea id="diary-content" placeholder="记录今天的精彩瞬间..."></textarea>
+            </div>
+            <button class="submit-btn" onclick="submitDiary()">保存日记</button>
+        </div>
+    </div>
+    
+    <!-- Audio Element for Music -->
+    <audio id="bg-music" loop>
+        <source src="" type="audio/mp3">
+    </audio>
+    
+    <script>
+        // Navigation
+        function switchTab(tab) {
+            document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+            document.getElementById('page-' + tab).classList.add('active');
+            document.querySelector(`.nav-item[data-page="${tab}"]`)?.classList.add('active');
+            window.scrollTo(0, 0);
+        }
+        
+        // Day Selector
+        document.querySelectorAll('.day-dot').forEach(dot => {
+            dot.addEventListener('click', () => {
+                document.querySelectorAll('.day-dot').forEach(d => d.classList.remove('active'));
+                dot.classList.add('active');
+                switchTab('day');
+            });
+        });
+        
+        // Modal
+        function showModal(type) {
+            document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+            document.getElementById('modal-' + type).classList.add('active');
+        }
+        
+        function closeModal() {
+            document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+        }
+        
+        // Close modal on backdrop click
+        document.querySelectorAll('.modal').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) closeModal();
+            });
+        });
+        
+        // Payer Selection
+        let selectedPayer = '陈飞杰';
+        function selectPayer(el, name) {
+            document.querySelectorAll('.payer-option').forEach(o => o.classList.remove('selected'));
+            el.classList.add('selected');
+            selectedPayer = name;
+        }
+        
+        // Expense Data
+        let expenses = [
+            { desc: 'Day2 晚餐·半只龙虾餐', amount: 1680, payer: '陈飞杰' },
+            { desc: 'Day3 观鲸船票×6', amount: 1500, payer: '施蓉' },
+            { desc: 'Day3 海狮区门票', amount: 240, payer: '洪亮' },
+            { desc: 'Day3 晚餐·中式团餐', amount: 960, payer: '周行' },
+            { desc: 'Day4 早餐·酒店自助', amount: 480, payer: '蔡磊' },
+            { desc: 'Day4 企鹅中心门票', amount: 600, payer: '戴岭' },
+            { desc: 'Day4 晚餐·岩石烧烤', amount: 1320, payer: '陈飞杰' },
+            { desc: 'Day4 住宿·Heritage Court', amount: 1640, payer: '洪亮' }
+        ];
+        
+        // Submit Expense
+        function submitExpense() {
+            const desc = document.getElementById('expense-desc').value;
+            const amount = parseFloat(document.getElementById('expense-amount').value);
+            
+            if (!desc || !amount) {
+                alert('请填写消费内容和金额');
+                return;
+            }
+            
+            expenses.push({ desc, amount, payer: selectedPayer });
+            closeModal();
+            
+            // Clear form
+            document.getElementById('expense-desc').value = '';
+            document.getElementById('expense-amount').value = '';
+            
+            // Show success (in real app, would recalculate and re-render)
+            alert('已记录：' + desc + ' ¥' + amount);
+        }
+        
+        // Photo Upload
+        function handlePhotoUpload(files) {
+            // Preview photos (in real app, would upload to server)
+            alert('已选择 ' + files.length + ' 张照片');
+        }
+        
+        function submitPhoto() {
+            const desc = document.getElementById('photo-desc').value;
+            alert('照片已上传：' + (desc || '无描述'));
+            closeModal();
+            document.getElementById('photo-desc').value = '';
+        }
+        
+        // Diary
+        function submitDiary() {
+            const content = document.getElementById('diary-content').value;
+            if (!content) {
+                alert('请写下今天的日记');
+                return;
+            }
+            alert('日记已保存');
+            closeModal();
+            document.getElementById('diary-content').value = '';
+        }
+        
+        // Music
+        let isPlaying = false;
+        const musicBtn = document.getElementById('music-toggle');
+        
+        function toggleMusic() {
+            isPlaying = !isPlaying;
+            musicBtn.textContent = isPlaying ? '⏸' : '▶';
+            musicBtn.classList.toggle('playing', isPlaying);
+            
+            // Note: In production, would play actual music file
+            if (isPlaying) {
+                // Simulate music playing
+                console.log('Playing music...');
+            }
+        }
+        
+        function playDayMusic(day) {
+            alert('🎵 播放 Day ' + day + ' 主题音乐');
+            // In production, would play the day's specific theme song
+        }
+        
+        // Calculate Settlement
+        function calculateSettlement() {
+            const members = ['陈飞杰', '施蓉', '洪亮', '蔡磊', '戴岭', '周行'];
+            const total = expenses.reduce((sum, e) => sum + e.amount, 0);
+            const perPerson = total / 6;
+            
+            const paid = {};
+            members.forEach(m => paid[m] = 0);
+            expenses.forEach(e => paid[e.payer] += e.amount);
+            
+            const settlement = {};
+            members.forEach(m => {
+                settlement[m] = paid[m] - perPerson;
+            });
+            
+            return { total, perPerson, settlement };
+        }
+        
+        // Initialize
+        console.log('NZ Trip App initialized');
+    </script>
+</body>
+</html>
