@@ -327,12 +327,12 @@
             line-height: 1.5;
         }
         
-        /* Timeline Nav */
+        /* Day Selector - 日历卡片风格 */
         .day-selector {
             display: flex;
             gap: 8px;
             overflow-x: auto;
-            padding: 12px 0;
+            padding: 12px 4px;
             -webkit-overflow-scrolling: touch;
             scrollbar-width: none;
         }
@@ -340,24 +340,104 @@
         .day-selector::-webkit-scrollbar { display: none; }
         
         .day-dot {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            background: #e0e0e0;
+            min-width: 58px;
+            height: 76px;
+            border-radius: 16px;
+            background: rgba(255,255,255,0.08);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
             display: flex;
+            flex-direction: column;
             align-items: center;
             justify-content: center;
-            font-size: 11px;
-            color: #666;
+            gap: 3px;
             flex-shrink: 0;
             cursor: pointer;
-            transition: all 0.3s;
+            transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+            border: 1.5px solid rgba(255,255,255,0.1);
+            padding: 8px 4px;
+            position: relative;
+            overflow: hidden;
         }
         
-        .day-dot.past { background: #d0d0d0; color: #888; }
-        .day-dot.today { background: linear-gradient(135deg, var(--primary), var(--secondary)); color: #fff; box-shadow: 0 4px 12px rgba(0,180,216,0.3); }
-        .day-dot.future { background: #f0f0f0; color: #999; }
-        .day-dot.active { transform: scale(1.15); }
+        .day-dot::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0;
+            height: 40%;
+            background: linear-gradient(180deg, rgba(255,255,255,0.06), transparent);
+            border-radius: 16px 16px 0 0;
+            pointer-events: none;
+        }
+        
+        .day-dot .day-week {
+            font-size: 9px;
+            color: rgba(255,255,255,0.35);
+            font-weight: 500;
+            letter-spacing: 0.5px;
+            position: relative;
+        }
+        
+        .day-dot .day-num {
+            font-size: 18px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.55);
+            position: relative;
+            line-height: 1;
+        }
+        
+        .day-dot .day-label {
+            font-size: 9px;
+            font-weight: 600;
+            color: rgba(255,255,255,0.25);
+            background: rgba(255,255,255,0.08);
+            padding: 1px 6px;
+            border-radius: 6px;
+            position: relative;
+        }
+        
+        /* 过往天：暗淡 + 删除线效果 */
+        .day-dot.past {
+            opacity: 0.4;
+            background: rgba(255,255,255,0.04);
+        }
+        .day-dot.past .day-num { color: rgba(255,255,255,0.3); }
+        
+        /* 今日：渐变背景 + 发光 */
+        .day-dot.today {
+            background: linear-gradient(160deg, rgba(0,180,216,0.5), rgba(0,150,199,0.3));
+            border-color: rgba(0,180,216,0.5);
+            box-shadow: 0 4px 20px rgba(0,180,216,0.3), inset 0 1px 0 rgba(255,255,255,0.15);
+        }
+        .day-dot.today .day-week { color: rgba(255,255,255,0.7); }
+        .day-dot.today .day-num { color: #fff; text-shadow: 0 0 12px rgba(255,255,255,0.5); }
+        .day-dot.today .day-label { background: rgba(255,255,255,0.2); color: rgba(255,255,255,0.9); }
+        
+        /* 未来天：玻璃卡片 */
+        .day-dot.future {
+            background: rgba(255,255,255,0.07);
+            border-color: rgba(255,255,255,0.1);
+        }
+        .day-dot.future:hover {
+            background: rgba(255,255,255,0.12);
+            border-color: rgba(255,255,255,0.2);
+        }
+        
+        /* 选中天(旅途中)：珊瑚红渐变 + 弹出动画 */
+        .day-dot.active {
+            background: linear-gradient(160deg, rgba(255,107,107,0.6), rgba(255,135,135,0.35));
+            border-color: rgba(255,107,107,0.5);
+            box-shadow: 0 6px 24px rgba(255,107,107,0.35), inset 0 1px 0 rgba(255,255,255,0.2);
+            transform: translateY(-4px) scale(1.08);
+        }
+        .day-dot.active .day-week { color: rgba(255,255,255,0.75); }
+        .day-dot.active .day-num { color: #fff; text-shadow: 0 0 14px rgba(255,255,255,0.4); }
+        .day-dot.active .day-label { background: rgba(255,255,255,0.25); color: rgba(255,255,255,0.95); }
+        
+        .day-dot:not(.empty):hover {
+            background: rgba(255,255,255,0.15);
+            transform: translateY(-2px);
+        }
         
         /* Photo Gallery - Per Member */
         .member-photos {
@@ -937,9 +1017,18 @@
                 <h1>🇳🇿 <span>新西兰之旅</span></h1>
                 <p class="subtitle">2026.4.26 - 5.7 · 南北岛12日9晚</p>
                 <div class="hero-badges">
-                    <span class="badge">📍 Day 4</span>
-                    <span class="badge">📷 12张</span>
-                    <span class="badge">💰 ¥8,420</span>
+                    <span class="badge" id="hero-day-badge">📍 Day 1</span>
+                    <span class="badge" id="hero-photo-badge">📷 0张</span>
+                    <span class="badge" id="hero-expense-badge">💰 ¥0</span>
+                </div>
+            </div>
+            
+            <!-- Countdown Banner (show when before departure) -->
+            <div class="card" id="countdown-card" style="background: linear-gradient(135deg, rgba(255,107,107,0.15), rgba(255,230,109,0.1)); border: 1px solid rgba(255,107,107,0.3);">
+                <div style="text-align: center; padding: 8px 0;">
+                    <div style="font-size: 28px; font-weight: 700; color: #FF6B6B; margin-bottom: 4px;" id="countdown-days">2</div>
+                    <div style="font-size: 12px; color: rgba(255,255,255,0.7);">天后出发 · 2026.4.26 浦东机场集合</div>
+                    <div style="font-size: 11px; color: rgba(255,255,255,0.5); margin-top: 4px;">📍 14:15 浦东T2 新西兰航空 NZ288 · C岛20-21号柜台</div>
                 </div>
             </div>
             
@@ -1056,7 +1145,7 @@
                 const tripConfig = {
                     startDate: new Date(2026, 3, 26), // 4月26日出发
                     endDate: new Date(2026, 4, 7),    // 5月7日到达上海
-                    currentDay: (() => {
+                    get currentDay() {
                         const today = new Date();
                         today.setHours(0, 0, 0, 0);
                         const start = new Date(2026, 3, 26);
@@ -1065,8 +1154,63 @@
                         if (diff < 0) return 0; // 出发前
                         if (diff > 11) return 12; // 行程结束
                         return diff + 1; // 第几天 (1-indexed)
-                    })()
+                    },
+                    get isBeforeTrip() {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const start = new Date(2026, 3, 26);
+                        start.setHours(0, 0, 0, 0);
+                        return today < start;
+                    },
+                    get daysUntilDeparture() {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const start = new Date(2026, 3, 26);
+                        start.setHours(0, 0, 0, 0);
+                        return Math.floor((start - today) / (1000 * 60 * 60 * 24));
+                    }
                 };
+                
+                // 12天完整行程数据
+                const itinerary = [
+                    { day: 1, date: '4月26日', title: '上海 → 奥克兰', desc: 'NZ288 14:15起飞，夜宿机上', highlights: ['新西兰航空', '机上佳肴美酒'], image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=600&q=80' },
+                    { day: 2, date: '4月27日', title: '奥克兰 → 基督城 → 凯库拉', desc: 'NZ527 09:00-10:25 内陆航班', highlights: ['凯库拉毛皮海狮聚集区', '半只龙虾餐'], image: 'https://images.unsplash.com/photo-1508193638397-1c4234db14d8?w=600&q=80' },
+                    { day: 3, date: '4月28日', title: '凯库拉 → 基督城', desc: '观鲸之旅，约2小时出海', highlights: ['观鲸（可退92纽币）', '雅芳河', '植物园'], image: 'https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=600&q=80' },
+                    { day: 4, date: '4月29日', title: '基督城 → 奥马鲁', desc: '企鹅归巢日', highlights: ['雅芳河畔', '蓝企鹅归巢', '岩石烧烤'], image: 'https://images.unsplash.com/photo-1507699622108-4be3abd695ad?w=600&q=80' },
+                    { day: 5, date: '4月30日', title: '奥马鲁 → 但尼丁 → 皇后镇', desc: '世界最陡街道', highlights: ['摩拉基大圆石', '但尼丁火车站', '鲍德温大街'], image: 'https://images.unsplash.com/photo-1507525428034-b723cf961d3e?w=600&q=80' },
+                    { day: 6, date: '5月1日', title: '皇后镇 → 格林诺奇', desc: '魔戒小镇', highlights: ['格林诺奇', 'Skyline缆车', '箭镇'], image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80' },
+                    { day: 7, date: '5月2日', title: '皇后镇自由日', desc: '没有Morning Call', highlights: ['皇后镇花园', '精品店'], image: 'https://images.unsplash.com/photo-1469521669194-babb45599def?w=600&q=80' },
+                    { day: 8, date: '5月3日', title: '皇后镇 → 库克山 → 梯卡坡', desc: '直升机冰川体验', highlights: ['瓦纳卡湖', '库克山直升机', '观星小镇'], image: 'https://images.unsplash.com/photo-1508739773434-c26b3d09e071?w=600&q=80' },
+                    { day: 9, date: '5月4日', title: '梯卡坡 → 基督城 → 奥克兰', desc: '好牧羊人教堂', highlights: ['梯卡坡湖', '好牧羊人教堂', '伊甸山'], image: 'https://images.unsplash.com/photo-1507699622108-4be3abd695ad?w=600&q=80' },
+                    { day: 10, date: '5月5日', title: '奥克兰 → 霍比特村 → 罗托鲁瓦', desc: '霍比特人村', highlights: ['霍比特村', '萤火虫洞'], image: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?w=600&q=80' },
+                    { day: 11, date: '5月6日', title: '罗托鲁瓦 → 奥克兰 → 上海', desc: '爱歌顿农场', highlights: ['红树林', '爱歌顿农场', 'NZ289 22:45'], image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=600&q=80' },
+                    { day: 12, date: '5月7日', title: '抵达上海', desc: '结束精彩旅程', highlights: ['抵达上海'], image: 'https://images.unsplash.com/photo-1540959733332-eab4deabeeaf?w=600&q=80' }
+                ];
+                
+                // 动态更新主页badge和倒计时
+                function updateHeroBadges() {
+                    const day = tripConfig.currentDay;
+                    const dayBadge = document.getElementById('hero-day-badge');
+                    const countdownCard = document.getElementById('countdown-card');
+                    const countdownDays = document.getElementById('countdown-days');
+                    
+                    if (dayBadge) {
+                        if (day === 0) {
+                            dayBadge.textContent = '🛫 准备出发';
+                        } else {
+                            dayBadge.textContent = `📍 Day ${day}`;
+                        }
+                    }
+                    
+                    if (tripConfig.isBeforeTrip && countdownCard) {
+                        countdownCard.style.display = 'block';
+                        if (countdownDays) {
+                            countdownDays.textContent = tripConfig.daysUntilDeparture;
+                        }
+                    } else if (countdownCard) {
+                        countdownCard.style.display = 'none';
+                    }
+                }
                 
                 function renderCalendar() {
                     const container = document.getElementById('calendarDays');
@@ -1112,18 +1256,80 @@
                     container.innerHTML = html;
                 }
                 
+                let selectedDay = null; // 当前选中的天，null表示当天
+
                 function selectDay(el) {
                     document.querySelectorAll('.cal-day').forEach(d => d.classList.remove('selected'));
                     el.classList.add('selected');
-                    const date = el.dataset.date;
-                    const dayNum = el.querySelector('.day-label').textContent;
-                    console.log('选中:', date, dayNum);
-                    // TODO: 根据选中日期更新页面内容
-                    showToast(`已切换到${date.slice(5)} ${dayNum}`);
+                    const dateStr = el.dataset.date;
+                    selectedDay = parseInt(el.querySelector('.day-label').textContent.replace('D', ''));
+                    updatePageContent();
+                    showToast(`已切换到 Day ${selectedDay}`);
                 }
                 
+                // 根据当前选中天更新页面内容
+                function updatePageContent() {
+                    const day = selectedDay || tripConfig.currentDay;
+                    const dayData = itinerary[day - 1];
+                    if (!dayData) return;
+                    
+                    // 更新首页预览
+                    const previewTitle = document.querySelector('#page-home .day-hero-overlay h2');
+                    const previewDate = document.querySelector('#page-home .day-hero-overlay p');
+                    const previewLocations = document.querySelector('#page-home .locations');
+                    const previewImage = document.querySelector('#page-home .day-hero img');
+                    const previewMeals = document.querySelectorAll('#page-home .info-item');
+                    
+                    if (previewTitle) previewTitle.textContent = `Day ${day} · ${dayData.title}`;
+                    if (previewDate) {
+                        const dayOfWeek = ['周日','周一','周二','周三','周四','周五','周六'][new Date(2026, 3, 25 + day).getDay()];
+                        previewDate.textContent = `📅 ${dayData.date} · ${dayOfWeek}`;
+                    }
+                    if (previewImage) previewImage.src = dayData.image;
+                    
+                    // 更新Day详情页
+                    const detailTitle = document.getElementById('day-title');
+                    const detailDate = document.getElementById('day-date');
+                    if (detailTitle) detailTitle.textContent = `Day ${day} · ${dayData.title}`;
+                    if (detailDate) {
+                        const dayOfWeek = ['周日','周一','周二','周三','周四','周五','周六'][new Date(2026, 3, 25 + day).getDay()];
+                        detailDate.textContent = `📅 ${dayData.date} · ${dayOfWeek}`;
+                    }
+                    
+                    // 更新音乐区域
+                    const musicTitle = document.querySelector('.music-title');
+                    const musicDesc = document.querySelector('.music-desc');
+                    const meta = musicMeta[day] || musicMeta.bgm;
+                    if (musicTitle) musicTitle.textContent = meta.title + (day > 0 ? ' - Day ' + day + ' 特别版' : '');
+                    if (musicDesc) musicDesc.textContent = meta.desc + ' · ' + meta.duration;
+                    
+                    // 更新AI日记标题
+                    const diaryTitle = document.querySelector('.diary-author-name');
+                    const diaryDate = document.querySelector('.diary-entry .diary-date');
+                    if (diaryTitle) diaryTitle.textContent = `AI 日记 · Day ${day}`;
+                    if (diaryDate) diaryDate.textContent = dayData.date;
+                }
+                
+                // 初始化：更新首页badge和倒计时
+                updateHeroBadges();
                 renderCalendar();
+                renderDaySelectorStrip();
+                updatePageContent(); // 初始加载时更新页面内容
             </script>
+            
+            <!-- Quick Actions -->
+            <div class="card">
+                <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div class="card-title">
+                        <span class="emoji">👤</span>
+                        当前身份：<span id="current-role" style="color: var(--primary);">队长(管理员)</span>
+                    </div>
+                    <div style="display: flex; gap: 8px;">
+                        <button onclick="setUserRole('manager')" id="btn-manager" style="padding: 4px 12px; border-radius: 12px; border: 1px solid var(--primary); background: var(--primary); color: #fff; font-size: 11px; cursor: pointer;">队长</button>
+                        <button onclick="setUserRole('member')" id="btn-member" style="padding: 4px 12px; border-radius: 12px; border: 1px solid #ccc; background: #fff; color: #666; font-size: 11px; cursor: pointer;">成员</button>
+                    </div>
+                </div>
+            </div>
             
             <!-- Quick Actions -->
             <div class="card">
@@ -1136,7 +1342,7 @@
                         <span style="font-size: 24px;">📷</span>
                         <div class="value">上传照片</div>
                     </div>
-                    <div class="info-item" style="cursor: pointer;" onclick="showModal('expense')">
+                    <div class="info-item" style="cursor: pointer;" onclick="handleExpenseClick()">
                         <span style="font-size: 24px;">💰</span>
                         <div class="value">记一笔</div>
                     </div>
@@ -1194,6 +1400,11 @@
         
         <!-- Day Detail Page -->
         <div class="page" id="page-day">
+            <!-- Day Selector Strip -->
+            <div style="padding: 0 4px;">
+                <div class="day-selector" id="daySelectorStrip"></div>
+            </div>
+            
             <div class="day-hero">
                 <img src="https://images.unsplash.com/photo-1507699622108-4be3abd695ad?w=600&q=80" alt="基督城">
                 <div class="day-hero-overlay">
@@ -1869,7 +2080,43 @@
             window.scrollTo(0, 0);
         }
         
-        // Day Selector
+        // Day Selector - Calendar style strip
+        const dayLabels = ['日','一','二','三','四','五','六'];
+        function renderDaySelectorStrip() {
+            const strip = document.getElementById('daySelectorStrip');
+            if (!strip) return;
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            let html = '';
+            itinerary.forEach((item, idx) => {
+                const d = new Date(2026, 3, 26 + idx);
+                const isPast = d < today;
+                const isToday = d.getTime() === today.getTime();
+                const isActive = idx + 1 === currentDay;
+                const dayOfWeek = dayLabels[d.getDay()];
+                let classes = 'day-dot';
+                if (isToday) classes += ' today';
+                else if (isPast) classes += ' past';
+                else classes += ' future';
+                if (isActive) classes += ' active';
+                html += `<div class="${classes}" onclick="selectDayFromStrip(${idx + 1}, this)">
+                    <span class="day-week">${dayOfWeek}</span>
+                    <span class="day-num">${item.date.replace('月','').replace('日','')}</span>
+                    <span class="day-label">D${idx + 1}</span>
+                </div>`;
+            });
+            strip.innerHTML = html;
+        }
+        
+        function selectDayFromStrip(day, el) {
+            currentDay = day;
+            document.querySelectorAll('#daySelectorStrip .day-dot').forEach(d => d.classList.remove('active'));
+            el.classList.add('active');
+            updatePageContent();
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+        
+        // Day Selector (old click handler for .day-dot)
         document.querySelectorAll('.day-dot').forEach(dot => {
             dot.addEventListener('click', () => {
                 document.querySelectorAll('.day-dot').forEach(d => d.classList.remove('active'));
@@ -1903,18 +2150,53 @@
             selectedPayer = name;
         }
         
-        // Expense Data
-        let expenses = [
-            { desc: 'Day2 晚餐·半只龙虾餐', amount: 1680, payer: '陈飞杰' },
-            { desc: 'Day3 观鲸船票×6', amount: 1500, payer: '施蓉' },
-            { desc: 'Day3 海狮区门票', amount: 240, payer: '洪亮' },
-            { desc: 'Day3 晚餐·中式团餐', amount: 960, payer: '周行' },
-            { desc: 'Day4 早餐·酒店自助', amount: 480, payer: '蔡磊' },
-            { desc: 'Day4 企鹅中心门票', amount: 600, payer: '戴岭' },
-            { desc: 'Day4 晚餐·岩石烧烤', amount: 1320, payer: '陈飞杰' },
-            { desc: 'Day4 住宿·Heritage Court', amount: 1640, payer: '洪亮' }
-        ];
+        // Expense Data (队长专用，临时添加的费用)
+        let expenses = [];
+        const members = ['陈飞杰', '施蓉', '洪亮', '蔡磊', '戴岭', '周行'];
         
+        // 用户角色: manager(页面管理人) / member(普通成员)
+        let currentUserRole = 'manager'; // 默认管理员，可切换测试
+        
+        function setUserRole(role) {
+            currentUserRole = role;
+            updateExpenseUI();
+            // 更新按钮样式
+            const btnManager = document.getElementById('btn-manager');
+            const btnMember = document.getElementById('btn-member');
+            const roleText = document.getElementById('current-role');
+            if (btnManager && btnMember && roleText) {
+                if (role === 'manager') {
+                    btnManager.style.background = 'var(--primary)';
+                    btnManager.style.color = '#fff';
+                    btnMember.style.background = '#fff';
+                    btnMember.style.color = '#666';
+                    roleText.textContent = '队长(管理员)';
+                } else {
+                    btnMember.style.background = 'var(--primary)';
+                    btnMember.style.color = '#fff';
+                    btnManager.style.background = '#fff';
+                    btnManager.style.color = '#666';
+                    roleText.textContent = '成员';
+                }
+            }
+            showToast(`已切换为: ${role === 'manager' ? '队长' : '成员'}`);
+        }
+        
+        function updateExpenseUI() {
+            const addExpenseSection = document.getElementById('add-expense-section');
+            if (addExpenseSection) {
+                addExpenseSection.style.display = currentUserRole === 'manager' ? 'block' : 'none';
+            }
+        }
+        
+        function handleExpenseClick() {
+            if (currentUserRole === 'manager') {
+                showModal('expense');
+            } else {
+                showToast('仅队长可记账');
+            }
+        }
+
         // Submit Expense
         function submitExpense() {
             const desc = document.getElementById('expense-desc').value;
@@ -1961,25 +2243,79 @@
             document.getElementById('diary-content').value = '';
         }
         
-        // Music
-        let isPlaying = false;
+        // Music Data - CDN URLs for all tracks
+        const musicTracks = {
+            bgm: 'https://cdn.hailuoai.com/mcp/cdn_upload/498505770719645697/392417298178204/1777409608_764c4143.mp3',
+            1: 'https://cdn.hailuoai.com/mcp/cdn_upload/498505770719645697/392417298178204/1777409619_c07bd631.mp3',
+            2: 'https://cdn.hailuoai.com/mcp/cdn_upload/498505770719645697/392417298178204/1777409621_2fcb7f42.mp3',
+            3: 'https://cdn.hailuoai.com/mcp/cdn_upload/498505770719645697/392417298178204/1777409623_e6d6b518.mp3',
+            4: 'https://cdn.hailuoai.com/mcp/cdn_upload/498505770719645697/392417298178204/1777409624_2a8bed09.mp3',
+            5: 'https://cdn.hailuoai.com/mcp/cdn_upload/498505770719645697/392417298178204/1777409626_c22d4976.mp3',
+            6: 'https://cdn.hailuoai.com/mcp/cdn_upload/498505770719645697/392417298178204/1777409631_cdb07499.mp3',
+            7: 'https://cdn.hailuoai.com/mcp/cdn_upload/498505770719645697/392417298178204/1777409633_d33fc2e4.mp3',
+            8: 'https://cdn.hailuoai.com/mcp/cdn_upload/498505770719645697/392417298178204/1777409634_c13d72fb.mp3',
+            9: 'https://cdn.hailuoai.com/mcp/cdn_upload/498505770719645697/392417298178204/1777409636_dca46aea.mp3',
+            10: 'https://cdn.hailuoai.com/mcp/cdn_upload/498505770719645697/392417298178204/1777409637_3daded9e.mp3',
+            11: 'https://cdn.hailuoai.com/mcp/cdn_upload/498505770719645697/392417298178204/1777409639_b97d9953.mp3',
+            12: 'https://cdn.hailuoai.com/mcp/cdn_upload/498505770719645697/392417298178204/1777409640_55896d54.mp3'
+        };
+
+        const musicMeta = {
+            bgm: { title: '「南半球的风」', desc: '🎵 旅行主题曲 · 循环播放', duration: '3:24' },
+            1: { title: '「冒险开始」', desc: '🌟 Day 1 · 奥克兰落地', duration: '3:12' },
+            2: { title: '「鲸鱼之歌」', desc: '🌊 Day 2 · 凯库拉观鲸', duration: '4:12' },
+            3: { title: '「海洋之息」', desc: '🐋 Day 3 · 凯库拉出海', duration: '3:45' },
+            4: { title: '「企鹅摇篮曲」', desc: '🐧 Day 4 · 奥马鲁企鹅', duration: '3:30' },
+            5: { title: '「冰川之梦」', desc: '🏔️ Day 5 · 弗朗茨约瑟夫', duration: '4:05' },
+            6: { title: '「湖泊倒影」', desc: '💧 Day 6 · 瓦纳卡湖', duration: '3:18' },
+            7: { title: '「冒险之都」', desc: '🎿 Day 7 · 皇后镇', duration: '3:42' },
+            8: { title: '「峡湾回声」', desc: '⛰️ Day 8 · 米尔福德', duration: '4:20' },
+            9: { title: '「萤火虫洞」', desc: '✨ Day 9 · 怀托摩', duration: '3:55' },
+            10: { title: '「地热之魂」', desc: '♨️ Day 10 · 罗托鲁瓦', duration: '3:38' },
+            11: { title: '「中土传说」', desc: '🧝 Day 11 · 霍比屯', duration: '3:50' },
+            12: { title: '「再见新西兰」', desc: '✈️ Day 12 · 奥克兰离别', duration: '4:10' }
+        };
+
+        // Background Music Player
+        let bgmAudio = null;
+        let isBgmPlaying = false;
         const musicBtn = document.getElementById('music-toggle');
         
         function toggleMusic() {
-            isPlaying = !isPlaying;
-            musicBtn.textContent = isPlaying ? '⏸' : '▶';
-            musicBtn.classList.toggle('playing', isPlaying);
-            
-            // Note: In production, would play actual music file
-            if (isPlaying) {
-                // Simulate music playing
-                console.log('Playing music...');
+            if (!bgmAudio) {
+                bgmAudio = new Audio(musicTracks.bgm);
+                bgmAudio.loop = true;
+                bgmAudio.volume = 0.4;
             }
+            
+            if (isBgmPlaying) {
+                bgmAudio.pause();
+                musicBtn.textContent = '▶';
+                musicBtn.classList.remove('playing');
+            } else {
+                bgmAudio.play().catch(e => console.log('Audio play failed:', e));
+                musicBtn.textContent = '⏸';
+                musicBtn.classList.add('playing');
+            }
+            isBgmPlaying = !isBgmPlaying;
         }
         
         function playDayMusic(day) {
-            alert('🎵 播放 Day ' + day + ' 主题音乐');
-            // In production, would play the day's specific theme song
+            const track = musicTracks[day];
+            const meta = musicMeta[day];
+            if (!track) return;
+            
+            const audio = new Audio(track);
+            audio.volume = 0.7;
+            audio.play().catch(e => console.log('Audio play failed:', e));
+            
+            // Update the UI music info
+            const allTitles = document.querySelectorAll('.music-title');
+            const allDescs = document.querySelectorAll('.music-desc');
+            allTitles.forEach(el => el.textContent = meta.title);
+            allDescs.forEach(el => el.textContent = meta.desc + ' · ' + meta.duration);
+            
+            showToast('🎵 正在播放：' + meta.title);
         }
         
         // Calculate Settlement
