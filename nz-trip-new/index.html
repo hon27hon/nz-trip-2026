@@ -1051,11 +1051,21 @@
             </style>
             
             <script>
-                // 行程日期配置 (2026年4月28日 - 5月9日)
+                // 行程日期配置 (2026年4月26日 - 5月7日)
+                // 自动计算当前是第几天
                 const tripConfig = {
-                    startDate: new Date(2026, 3, 28), // 4月28日
-                    endDate: new Date(2026, 4, 9),    // 5月9日
-                    currentDay: 4  // 当前是第4天 (4月28+3=5月1日)
+                    startDate: new Date(2026, 3, 26), // 4月26日出发
+                    endDate: new Date(2026, 4, 7),    // 5月7日到达上海
+                    currentDay: (() => {
+                        const today = new Date();
+                        today.setHours(0, 0, 0, 0);
+                        const start = new Date(2026, 3, 26);
+                        start.setHours(0, 0, 0, 0);
+                        const diff = Math.floor((today - start) / (1000 * 60 * 60 * 24));
+                        if (diff < 0) return 0; // 出发前
+                        if (diff > 11) return 12; // 行程结束
+                        return diff + 1; // 第几天 (1-indexed)
+                    })()
                 };
                 
                 function renderCalendar() {
