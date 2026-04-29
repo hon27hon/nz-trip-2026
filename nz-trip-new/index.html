@@ -44,30 +44,22 @@
             btn.disabled = true;
             try {
                 for (const file of pendingPhotos) {
-                    // 1. 获取 R2 上传地址
-                    const res1 = await fetch(`${WORKER_URL}/api/photos/upload`, {
+                    const reader = new FileReader();
+                    const url = await new Promise((resolve, reject) => {
+                        reader.onload = e => resolve(e.target.result);
+                        reader.onerror = reject;
+                        reader.readAsDataURL(file);
+                    });
+                    // 通过 Worker 上传（Worker 内部调 R2，无需 CORS）
+                    const res = await fetch(`${WORKER_URL}/api/photos`, {
                         method: 'POST',
                         headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ filename: file.name, contentType: file.type })
+                        body: JSON.stringify({ url, desc, day, uploader: '队友', filename: file.name })
                     });
-                    if (!res1.ok) throw new Error('获取上传地址失败');
-                    const { publicUrl } = await res1.json();
-
-                    // 2. 直接上传到 R2（公开桶，无需认证）
-                    const uploadRes = await fetch(publicUrl, {
-                        method: 'PUT',
-                        headers: { 'Content-Type': file.type },
-                        body: file
-                    });
-                    if (!uploadRes.ok) throw new Error('上传到R2失败');
-
-                    // 3. 保存元数据到 D1
-                    const res2 = await fetch(`${WORKER_URL}/api/photos`, {
-                        method: 'POST',
-                        headers: { 'Content-Type': 'application/json' },
-                        body: JSON.stringify({ url: publicUrl, desc, day, uploader: '队友' })
-                    });
-                    if (!res2.ok) throw new Error('保存元数据失败');
+                    if (!res.ok) {
+                        const err = await res.text();
+                        throw new Error('上传失败: ' + err);
+                    }
                 }
                 closeModal();
                 document.getElementById('photo-preview').innerHTML = '';
@@ -2106,8 +2098,38 @@
         </div>
     </nav>
     
-    <!-- FAB Button -->
-    <button class="fab" onclick="showModal('expense')">+</button>
+    <!-- FAB Button with Menu -->
+    <button class="fab" onclick="toggleFabMenu()">+</button>
+    <div id="fab-menu" class="fab-menu" style="display:none;position:fixed;bottom:90px;right:24px;background:var(--card-bg);border-radius:12px;box-shadow:0 4px 20px rgba(0,0,0,0.3);z-index:999;min-width:140px;overflow:hidden;">
+        <div class="fab-menu-item" onclick="switchTab('photo');showModal('photo');toggleFabMenu()">📷 照片</div>
+        <div class="fab-menu-item" onclick="switchTab('diary');showModal('diary');toggleFabMenu()">📝 日记</div>
+        <div class="fab-menu-item" onclick="showModal('expense');toggleFabMenu()">💰 记账</div>
+    </div>
+
+    <style>
+    .fab-menu-item {
+        padding: 14px 20px;
+        cursor: pointer;
+        font-size: 15px;
+        color: var(--text);
+        border-bottom: 1px solid rgba(0,0,0,0.05);
+        transition: background 0.15s;
+    }
+    .fab-menu-item:last-child { border-bottom: none; }
+    .fab-menu-item:hover { background: var(--light); }
+    </style>
+    <script>
+    function toggleFabMenu() {
+        const m = document.getElementById('fab-menu');
+        m.style.display = m.style.display === 'none' ? 'block' : 'none';
+    }
+    document.addEventListener('click', e => {
+        if (!e.target.closest('.fab') && !e.target.closest('#fab-menu')) {
+            const m = document.getElementById('fab-menu');
+            if (m) m.style.display = 'none';
+        }
+    });
+    </script>
     
     <!-- Login Modal -->
     <div class="modal" id="modal-login">
