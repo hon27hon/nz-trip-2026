@@ -3,63 +3,15 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=3.0">
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-storage-compat.js"></script>
     <script>
-        // === Firebase 配置 ===
-        const firebaseConfig = {
-            apiKey: "AIzaSyDAxqNN-_hoOeB0FPmTTiqGRby126foVQo",
-            authDomain: "nz-trip-2026-8a7ed.firebaseapp.com",
-            projectId: "nz-trip-2026-8a7ed",
-            storageBucket: "nz-trip-2026-8a7ed.firebasestorage.app",
-            messagingSenderId: "1008612372969",
-            appId: "1:1008612372969:web:94868591acf882c4b35b78"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const storage = firebase.storage();
-        const auth = firebase.auth();
+        // === Cloudflare Worker + R2 共享存储 ===
+        const WORKER_URL = 'https://nz-trip-api.8c69a766f2ea0dbf7fd2f3b244a88da8.workers.dev';
+        const R2_BASE = 'https://nz-trip-photos.8c69a766f2ea0dbf7fd2f3b244a88da8.r2.cloudflarestorage.com';
 
-        // === 管理员登录状态 ===
-        let currentUser = null;
-        let isManager = false;
-
-        auth.onAuthStateChanged(user => {
-            currentUser = user;
-            isManager = !!user;
-            const loginBtn = document.getElementById('btn-login');
-            const logoutBtn = document.getElementById('btn-logout');
-            if (loginBtn) loginBtn.style.display = isManager ? 'none' : 'inline-block';
-            if (logoutBtn) logoutBtn.style.display = isManager ? 'inline-block' : 'none';
-            if (user) {
-                loadPhotos();
-                loadDiaries();
-            }
-        });
-
-        function showLoginModal() {
-            document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
-            document.getElementById('modal-login').classList.add('active');
-        }
-
-        async function doLogin() {
-            const email = document.getElementById('login-email').value.trim();
-            const password = document.getElementById('login-password').value;
-            if (!email || !password) { alert('请输入邮箱和密码'); return; }
-            try {
-                await auth.signInWithEmailAndPassword(email, password);
-                closeModal();
-                showToast('✅ 登录成功！');
-            } catch(e) {
-                alert('登录失败：' + e.message);
-            }
-        }
-
-        async function doLogout() {
-            await auth.signOut();
-            showToast('已退出登录');
+        // 初始化
+        async function init() {
+            loadPhotos();
+            loadDiaries();
         }
 
         // === 照片上传 ===
@@ -84,25 +36,38 @@
         }
 
         async function submitPhoto() {
-            if (!isManager) { showLoginModal(); return; }
             if (pendingPhotos.length === 0) { alert('请先选择照片'); return; }
-
             const desc = document.getElementById('photo-desc').value.trim();
             const day = document.getElementById('photo-day').value;
             const btn = document.querySelector('#modal-photo .submit-btn');
             btn.textContent = '上传中...';
             btn.disabled = true;
-
             try {
                 for (const file of pendingPhotos) {
-                    const ref = storage.ref('photos/' + Date.now() + '_' + file.name);
-                    await ref.put(file);
-                    const url = await ref.getDownloadURL();
-                    await db.collection('photos').add({
-                        url, desc, day,
-                        uploader: currentUser.email,
-                        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                    // 1. 获取 R2 上传地址
+                    const res1 = await fetch(`${WORKER_URL}/api/photos/upload`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ filename: file.name, contentType: file.type })
                     });
+                    if (!res1.ok) throw new Error('获取上传地址失败');
+                    const { publicUrl } = await res1.json();
+
+                    // 2. 直接上传到 R2（公开桶，无需认证）
+                    const uploadRes = await fetch(publicUrl, {
+                        method: 'PUT',
+                        headers: { 'Content-Type': file.type },
+                        body: file
+                    });
+                    if (!uploadRes.ok) throw new Error('上传到R2失败');
+
+                    // 3. 保存元数据到 D1
+                    const res2 = await fetch(`${WORKER_URL}/api/photos`, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ url: publicUrl, desc, day, uploader: '队友' })
+                    });
+                    if (!res2.ok) throw new Error('保存元数据失败');
                 }
                 closeModal();
                 document.getElementById('photo-preview').innerHTML = '';
@@ -119,19 +84,24 @@
         }
 
         async function loadPhotos() {
-            const snap = await db.collection('photos').orderBy('createdAt', 'desc').limit(30).get();
             const grid = document.getElementById('photo-grid-dynamic');
             if (!grid) return;
-            if (snap.empty) { grid.innerHTML = '<p style="color:var(--muted);text-align:center;padding:20px;">暂无照片，上传第一张吧！</p>'; return; }
-            let html = '';
-            snap.forEach(doc => {
-                const d = doc.data();
-                html += `<div class="photo-item" onclick="showPhotoModal('${d.url}', '${d.desc || ''}')">
-                    <img src="${d.url}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;">
-                    <span class="photo-count">${d.day ? 'D'+d.day : ''} ${d.desc || ''}</span>
-                </div>`;
-            });
-            grid.innerHTML = html;
+            try {
+                const res = await fetch(`${WORKER_URL}/api/photos`);
+                const photos = await res.json();
+                if (!photos || photos.length === 0) {
+                    grid.innerHTML = '<p style="color:var(--muted);text-align:center;padding:20px;">暂无照片，上传第一张吧！</p>';
+                    return;
+                }
+                grid.innerHTML = photos.slice(0, 30).map(p => `
+                    <div class="photo-item" onclick="showPhotoModal('${p.url}', '${(p.description||'').replace(/'/g,"\\'")}')">
+                        <img src="${p.url}" style="width:100%;height:100%;object-fit:cover;border-radius:8px;" loading="lazy">
+                        <span class="photo-count">${p.day ? 'D'+p.day : ''} ${p.description || ''}</span>
+                    </div>`).join('');
+            } catch(e) {
+                console.error('loadPhotos error:', e);
+                grid.innerHTML = '<p style="color:var(--muted);text-align:center;padding:20px;">加载失败，请刷新重试</p>';
+            }
         }
 
         function showPhotoModal(url, desc) {
@@ -140,9 +110,8 @@
             document.getElementById('modal-lightbox').classList.add('active');
         }
 
-        // === 日记提交 ===
+        // === 日记 ===
         async function submitDiary() {
-            if (!isManager) { showLoginModal(); return; }
             const content = document.getElementById('diary-content').value.trim();
             const mood = document.getElementById('diary-mood').value.trim();
             const day = document.getElementById('diary-day').value;
@@ -151,11 +120,12 @@
             btn.textContent = '保存中...';
             btn.disabled = true;
             try {
-                await db.collection('diaries').add({
-                    content, mood, day: day || null,
-                    author: currentUser.email,
-                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                const res = await fetch(`${WORKER_URL}/api/diaries`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ content, mood, day: day || null, author: '队友' })
                 });
+                if (!res.ok) throw new Error('保存失败');
                 closeModal();
                 document.getElementById('diary-content').value = '';
                 document.getElementById('diary-mood').value = '';
@@ -170,33 +140,34 @@
         }
 
         async function loadDiaries() {
-            const snap = await db.collection('diaries').orderBy('createdAt', 'desc').limit(20).get();
             const container = document.getElementById('diary-dynamic-list');
             if (!container) return;
-            if (snap.empty) { container.innerHTML = ''; return; }
-            let html = '';
-            snap.forEach(doc => {
-                const d = doc.data();
-                const date = d.createdAt ? new Date(d.createdAt.seconds*1000).toLocaleDateString('zh-CN') : '未知';
-                html += `<div class="diary-entry" style="margin-bottom:16px;">
-                    <div class="diary-header">
-                        <div class="diary-author">
-                            <div class="diary-avatar">🤖</div>
-                            <div>
-                                <div class="diary-author-name">AI 日记${d.day ? ' · Day '+d.day : ''}</div>
-                                <div class="diary-date">${date}</div>
+            try {
+                const res = await fetch(`${WORKER_URL}/api/diaries`);
+                const diaries = await res.json();
+                if (!diaries || diaries.length === 0) { container.innerHTML = ''; return; }
+                container.innerHTML = diaries.slice(0, 20).map(d => {
+                    const date = new Date(d.created_at).toLocaleDateString('zh-CN');
+                    return `<div class="diary-entry" style="margin-bottom:16px;">
+                        <div class="diary-header">
+                            <div class="diary-author">
+                                <div class="diary-avatar">🤖</div>
+                                <div>
+                                    <div class="diary-author-name">队友日记${d.day ? ' · Day '+d.day : ''}</div>
+                                    <div class="diary-date">${date}</div>
+                                </div>
                             </div>
                         </div>
-                    </div>
-                    <div class="diary-content"><p>${d.content}</p></div>
-                    ${d.mood ? `<div class="diary-mood">${d.mood}</div>` : ''}
-                </div>`;
-            });
-            container.innerHTML = html;
+                        <div class="diary-content"><p>${d.content}</p></div>
+                        ${d.mood ? `<div class="diary-mood">${d.mood}</div>` : ''}
+                    </div>`;
+                }).join('');
+            } catch(e) {
+                console.error('loadDiaries error:', e);
+            }
         }
 
-        // 页面加载时尝试自动登录（无感知）
-        auth.signInAnonymously().catch(() => {});
+        init();
     </script>
 </head>
     <style>
